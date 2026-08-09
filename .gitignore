@@ -1,0 +1,29 @@
+# Ambiente e segredos
+.env
+*.env.local
+
+# Backend Maven
+backend/target/
+backend/.mvn/
+!backend/.mvn/wrapper/maven-wrapper.properties
+*.class
+*.jar
+*.war
+
+# Frontend Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+.vscode/

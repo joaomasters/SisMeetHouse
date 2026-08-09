@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+
+  # ── Banco de dados PostgreSQL ───────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: acougue_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       acougue_db
+      POSTGRES_USER:     acougue
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-acougue@2025}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"       # remove esta linha em produção
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acougue -d acougue_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend Spring Boot ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: acougue_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL:      jdbc:postgresql://postgres:5432/acougue_db
+      SPRING_DATASOURCE_USERNAME: acougue
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-acougue@2025}
+      SPRING_PROFILES_ACTIVE:     prod
+      ACOUGUE_CORS_ALLOWED_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80}
+    ports:
+      - "8080:8080"       # remove em produção se usar só pelo nginx
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/api/estoque/produtos || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Frontend React (Nginx) ──────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: acougue_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"         # para HTTPS com Nginx Proxy Manager
+
+volumes:
+  postgres_data:
