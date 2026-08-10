@@ -14,7 +14,7 @@ export default function ProdutosPage() {
   const [busca, setBusca]   = useState('')
   const [form, setForm]     = useState<Partial<Produto> | null>(null)
 
-  const { data: produtos = [], isLoading } = useQuery<Produto[]>({
+  const { data: produtos = [], isLoading, isError, error } = useQuery<Produto[]>({
     queryKey: ['produtos', busca],
     queryFn: () =>
       api.get('/estoque/produtos', { params: busca ? { nome: busca } : {} })
@@ -63,6 +63,11 @@ export default function ProdutosPage() {
       <div className="bg-white rounded-xl shadow overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-gray-500">Carregando...</div>
+        ) : isError ? (
+          <div className="p-8 text-center">
+            <p className="text-red-600 font-medium mb-1">Erro ao carregar produtos</p>
+            <p className="text-gray-400 text-sm">{String((error as Error)?.message ?? 'Falha na requisição')}</p>
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
