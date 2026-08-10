@@ -19,32 +19,34 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Rota pública */}
         <Route path="/login" element={<LoginPage />} />
 
-        <Route path="/pdv" element={
-          <PrivateRoute><PDVPage /></PrivateRoute>
-        } />
-
-        <Route element={
-          <PrivateRoute><Layout /></PrivateRoute>
-        }>
-          <Route path="/" element={<Navigate to="/estoque/produtos" replace />} />
-
-          <Route path="/pdv/sangria"           element={<SangriaPage />} />
-
-          <Route path="/estoque/produtos"      element={<ProdutosPage />} />
-          <Route path="/estoque/desossa"       element={<DesossaPage />} />
-          <Route path="/estoque/inventario"    element={<InventarioPage />} />
-          <Route path="/estoque/perdas"        element={<PerdasPage />} />
-
-          <Route path="/financeiro/faturamento"    element={<FaturamentoPage />} />
-          <Route path="/financeiro/contas-receber" element={<ContasReceberPage />} />
-          <Route path="/financeiro/contas-pagar"   element={<ContasPagarPage />} />
-          <Route path="/financeiro/dre"            element={<DrePage />} />
-          <Route path="/financeiro/relatorios"     element={<RelatoriosPage />} />
-
-          <Route path="/balanca" element={<CargaBalancaPage />} />
+        {/* PDV sem sidebar (autenticado mas sem Layout) */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/pdv" element={<PDVPage />} />
         </Route>
+
+        {/* Back-office: autenticado + Layout com sidebar */}
+        <Route element={<PrivateRoute />}>
+          <Route element={<Layout />}>
+            <Route index element={<Navigate to="/estoque/produtos" replace />} />
+            <Route path="/pdv/sangria"               element={<SangriaPage />} />
+            <Route path="/estoque/produtos"          element={<ProdutosPage />} />
+            <Route path="/estoque/desossa"           element={<DesossaPage />} />
+            <Route path="/estoque/inventario"        element={<InventarioPage />} />
+            <Route path="/estoque/perdas"            element={<PerdasPage />} />
+            <Route path="/financeiro/faturamento"    element={<FaturamentoPage />} />
+            <Route path="/financeiro/contas-receber" element={<ContasReceberPage />} />
+            <Route path="/financeiro/contas-pagar"   element={<ContasPagarPage />} />
+            <Route path="/financeiro/dre"            element={<DrePage />} />
+            <Route path="/financeiro/relatorios"     element={<RelatoriosPage />} />
+            <Route path="/balanca"                   element={<CargaBalancaPage />} />
+          </Route>
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/estoque/produtos" replace />} />
       </Routes>
     </BrowserRouter>
   )

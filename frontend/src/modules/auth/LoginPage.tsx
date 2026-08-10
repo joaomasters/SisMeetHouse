@@ -18,7 +18,7 @@ export default function LoginPage() {
     try {
       const res = await axios.post('/api/auth/login', { username, password })
       setToken(res.data.token)
-      navigate('/')
+      navigate('/estoque/produtos')
     } catch {
       setError('Usuário ou senha incorretos')
     } finally {
