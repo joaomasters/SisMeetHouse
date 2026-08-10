@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './shared/components/Layout'
+import PrivateRoute from './shared/components/PrivateRoute'
+import LoginPage from './modules/auth/LoginPage'
 import PDVPage from './modules/pdv/PDVPage'
 import SangriaPage from './modules/pdv/SangriaPage'
 import ProdutosPage from './modules/estoque/ProdutosPage'
@@ -17,30 +19,30 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* PDV fica sem sidebar (tela cheia) */}
-        <Route path="/pdv" element={<PDVPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
-        {/* Back-office com layout */}
-        <Route element={<Layout />}>
+        <Route path="/pdv" element={
+          <PrivateRoute><PDVPage /></PrivateRoute>
+        } />
+
+        <Route element={
+          <PrivateRoute><Layout /></PrivateRoute>
+        }>
           <Route path="/" element={<Navigate to="/estoque/produtos" replace />} />
 
-          {/* Caixa */}
-          <Route path="/pdv/sangria" element={<SangriaPage />} />
+          <Route path="/pdv/sangria"           element={<SangriaPage />} />
 
-          {/* Estoque */}
-          <Route path="/estoque/produtos"   element={<ProdutosPage />} />
-          <Route path="/estoque/desossa"    element={<DesossaPage />} />
-          <Route path="/estoque/inventario" element={<InventarioPage />} />
-          <Route path="/estoque/perdas"     element={<PerdasPage />} />
+          <Route path="/estoque/produtos"      element={<ProdutosPage />} />
+          <Route path="/estoque/desossa"       element={<DesossaPage />} />
+          <Route path="/estoque/inventario"    element={<InventarioPage />} />
+          <Route path="/estoque/perdas"        element={<PerdasPage />} />
 
-          {/* Financeiro */}
           <Route path="/financeiro/faturamento"    element={<FaturamentoPage />} />
           <Route path="/financeiro/contas-receber" element={<ContasReceberPage />} />
           <Route path="/financeiro/contas-pagar"   element={<ContasPagarPage />} />
           <Route path="/financeiro/dre"            element={<DrePage />} />
           <Route path="/financeiro/relatorios"     element={<RelatoriosPage />} />
 
-          {/* Balança */}
           <Route path="/balanca" element={<CargaBalancaPage />} />
         </Route>
       </Routes>

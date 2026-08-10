@@ -1,19 +1,15 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
   ShoppingCart, Package, Scissors, DollarSign,
   CreditCard, BarChart2, Scale, AlertTriangle,
-  ClipboardList, TrendingDown, ArrowDownCircle, BarChart
+  ClipboardList, TrendingDown, ArrowDownCircle, BarChart, LogOut
 } from 'lucide-react'
 import clsx from 'clsx'
+import { removeToken } from '../auth'
 
 const nav = [
-  {
-    label: 'PDV / Caixa',
-    href: '/pdv',
-    icon: ShoppingCart,
-    external: true,
-  },
-  { label: 'Sangria / Suprimento', href: '/pdv/sangria', icon: ArrowDownCircle },
+  { label: 'PDV / Caixa',          href: '/pdv',              icon: ShoppingCart,   external: true },
+  { label: 'Sangria / Suprimento', href: '/pdv/sangria',      icon: ArrowDownCircle },
 
   { separator: 'Estoque' },
   { label: 'Produtos',    href: '/estoque/produtos',   icon: Package },
@@ -33,6 +29,13 @@ const nav = [
 ]
 
 export default function Sidebar() {
+  const navigate = useNavigate()
+
+  const logout = () => {
+    removeToken()
+    navigate('/login')
+  }
+
   return (
     <aside className="w-60 bg-gray-900 text-white flex flex-col min-h-screen">
       <div className="px-5 py-5 border-b border-gray-700">
@@ -57,8 +60,7 @@ export default function Sidebar() {
                 href={item.href}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
-                           text-gray-300 hover:bg-red-700 hover:text-white transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-red-700 hover:text-white transition-colors"
               >
                 <Icon size={16} />
                 {item.label}
@@ -85,8 +87,15 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="px-5 py-4 border-t border-gray-700 text-xs text-gray-500">
-        v2.0.0 — Java 17 + React 18
+      <div className="px-3 py-3 border-t border-gray-700">
+        <button
+          onClick={logout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full"
+        >
+          <LogOut size={16} />
+          Sair
+        </button>
+        <p className="px-3 pt-2 text-xs text-gray-600">v2.0.0 — Java 17 + React 18</p>
       </div>
     </aside>
   )
