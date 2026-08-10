@@ -43,6 +43,10 @@ public class Cliente {
     private BigDecimal limiteCredito = BigDecimal.ZERO;
 
     @Builder.Default
+    @Column(name = "saldo_fiado_atual", precision = 12, scale = 2)
+    private BigDecimal saldoFiadoAtual = BigDecimal.ZERO;
+
+    @Builder.Default
     private Boolean ativo = true;
 
     @CreationTimestamp

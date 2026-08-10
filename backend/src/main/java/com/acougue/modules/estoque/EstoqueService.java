@@ -52,6 +52,17 @@ public class EstoqueService {
         return produtoRepo.findEstoqueAbaixoMinimo();
     }
 
+    @Transactional
+    public void ajuste(Produto produto, BigDecimal quantidade, String tipo, String docRef, Long usuarioId) {
+        if ("AJUSTE_POSITIVO".equals(tipo)) {
+            produto.setEstoqueAtual(produto.getEstoqueAtual().add(quantidade).setScale(4, RoundingMode.HALF_UP));
+        } else {
+            produto.setEstoqueAtual(produto.getEstoqueAtual().subtract(quantidade).max(BigDecimal.ZERO).setScale(4, RoundingMode.HALF_UP));
+        }
+        produtoRepo.save(produto);
+        registrar(produto, quantidade, produto.getPrecoCusto(), tipo, docRef, usuarioId);
+    }
+
     private void atualizarCustoMedio(Produto produto, BigDecimal qtdNova, BigDecimal custoNovo) {
         if (custoNovo == null || custoNovo.compareTo(BigDecimal.ZERO) <= 0) return;
         BigDecimal estoqueAnt = produto.getEstoqueAtual();

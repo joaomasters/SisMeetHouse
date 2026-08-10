@@ -39,4 +39,12 @@ public class Caixa {
 
     @Column(columnDefinition = "TEXT")
     private String observacao;
+
+    @Builder.Default
+    @Column(name = "total_sangria", precision = 12, scale = 2)
+    private BigDecimal totalSangria = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(name = "total_suprimento", precision = 12, scale = 2)
+    private BigDecimal totalSuprimento = BigDecimal.ZERO;
 }
