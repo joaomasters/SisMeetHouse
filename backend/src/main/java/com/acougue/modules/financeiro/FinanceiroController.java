@@ -1,8 +1,10 @@
 package com.acougue.modules.financeiro;
 
+import com.acougue.entity.Cliente;
 import com.acougue.entity.ContasAReceber;
 import com.acougue.entity.FaturamentoCliente;
 import com.acougue.modules.financeiro.dto.DreDTO;
+import com.acougue.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +19,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FinanceiroController {
 
-    private final FaturamentoService faturamentoService;
-    private final DreService         dreService;
+    private final FaturamentoService  faturamentoService;
+    private final DreService          dreService;
+    private final ClienteRepository   clienteRepository;
+
+    // ── Clientes ──────────────────────────────────────────────
+
+    @GetMapping("/clientes")
+    public ResponseEntity<List<Cliente>> listarClientes() {
+        return ResponseEntity.ok(clienteRepository.findByAtivoTrue());
+    }
 
     // ── Faturamento ───────────────────────────────────────────
 

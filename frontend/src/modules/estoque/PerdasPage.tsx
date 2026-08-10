@@ -29,6 +29,10 @@ export default function PerdasPage() {
   const [motivo, setMotivo] = useState('VENCIMENTO')
   const [observacao, setObservacao] = useState('')
 
+  const qtdValida = quantidade === '' || /^[\d]+([,.][\d]+)?$/.test(quantidade.trim())
+  const qtdNum = parseFloat(quantidade.replace(',', '.'))
+  const podeLancar = !!produtoId && quantidade.trim() !== '' && qtdValida && qtdNum > 0
+
   const produtos = useQuery<Produto[]>({
     queryKey: ['produtos'],
     queryFn: () => api.get('/estoque/produtos').then(r => r.data),
@@ -153,8 +157,17 @@ export default function PerdasPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-gray-500 font-medium">Quantidade</label>
-                <input type="text" value={quantidade} onChange={e => setQuantidade(e.target.value)}
-                  className="mt-1 block w-full border rounded-lg px-3 py-2 text-sm" placeholder="0,000" />
+                <input
+                  type="text"
+                  value={quantidade}
+                  onChange={e => setQuantidade(e.target.value)}
+                  placeholder="0,000"
+                  className={`mt-1 block w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2
+                    ${!qtdValida && quantidade !== '' ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-red-500'}`}
+                />
+                {!qtdValida && quantidade !== '' && (
+                  <p className="text-xs text-red-500 mt-1">Use vírgula como decimal. Ex: 1,250</p>
+                )}
               </div>
               <div>
                 <label className="text-xs text-gray-500 font-medium">Motivo</label>
@@ -175,7 +188,7 @@ export default function PerdasPage() {
                 Cancelar
               </button>
               <button onClick={() => lancar.mutate()}
-                disabled={!produtoId || !quantidade || lancar.isPending}
+                disabled={!podeLancar || lancar.isPending}
                 className="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50">
                 {lancar.isPending ? 'Salvando...' : 'Lançar'}
               </button>
