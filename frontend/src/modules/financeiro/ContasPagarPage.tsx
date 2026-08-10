@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '../../shared/api/axios'
+import { api } from '../../shared/api/axios'
 import { TrendingDown, Plus, AlertCircle } from 'lucide-react'
 
 interface ContaPagar {

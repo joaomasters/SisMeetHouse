@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import api from '../../shared/api/axios'
+import { api } from '../../shared/api/axios'
 import { BarChart2, TrendingUp, TrendingDown, Package, ShoppingBag } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 

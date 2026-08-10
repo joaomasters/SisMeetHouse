@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '../../shared/api/axios'
+import { api } from '../../shared/api/axios'
 import { ClipboardList, CheckCircle2, XCircle, ChevronRight } from 'lucide-react'
 
 interface Inventario {

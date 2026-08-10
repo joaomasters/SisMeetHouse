@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '../../shared/api/axios'
+import { api } from '../../shared/api/axios'
 import { AlertTriangle, Plus } from 'lucide-react'
 
 interface Produto { id: number; nome: string; unidadeMedida: string; precoCusto: number }
