@@ -1,0 +1,79 @@
+package com.acougue.modules.estoque;
+
+import com.acougue.entity.Produto;
+import com.acougue.entity.RecebimentoItem;
+import com.acougue.entity.RecebimentoMercadoria;
+import com.acougue.modules.estoque.dto.RecebimentoDTO;
+import com.acougue.repository.ProdutoRepository;
+import com.acougue.repository.RecebimentoRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class RecebimentoService {
+
+    private final RecebimentoRepository recebimentoRepo;
+    private final ProdutoRepository     produtoRepo;
+    private final EstoqueService        estoqueService;
+
+    public List<RecebimentoMercadoria> listar() {
+        return recebimentoRepo.findAllByOrderByCreatedAtDesc();
+    }
+
+    public RecebimentoMercadoria buscar(Long id) {
+        return recebimentoRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Recebimento não encontrado: " + id));
+    }
+
+    @Transactional
+    public RecebimentoMercadoria registrar(RecebimentoDTO dto) {
+        RecebimentoMercadoria rec = RecebimentoMercadoria.builder()
+                .fornecedor(dto.fornecedor())
+                .numeroNf(dto.numeroNf())
+                .serieNf(dto.serieNf() != null ? dto.serieNf() : "1")
+                .chaveNf(dto.chaveNf())
+                .dataEmissao(dto.dataEmissao())
+                .valorTotal(dto.valorTotal())
+                .observacao(dto.observacao())
+                .xmlNf(dto.xmlNf())
+                .status("CONFERIDO")
+                .build();
+
+        for (RecebimentoDTO.ItemDTO item : dto.itens()) {
+            Produto produto = produtoRepo.findById(item.produtoId())
+                    .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + item.produtoId()));
+
+            BigDecimal custoUnit = item.custoUnitario() != null ? item.custoUnitario() : BigDecimal.ZERO;
+            BigDecimal custoTotal = custoUnit.multiply(item.quantidade()).setScale(4, RoundingMode.HALF_UP);
+
+            RecebimentoItem ri = RecebimentoItem.builder()
+                    .recebimento(rec)
+                    .produto(produto)
+                    .quantidade(item.quantidade())
+                    .custoUnitario(custoUnit)
+                    .custoTotal(custoTotal)
+                    .build();
+            rec.getItens().add(ri);
+
+            String docRef = "NF" + (dto.numeroNf() != null ? dto.numeroNf() : "S/N");
+            estoqueService.entrada(produto, item.quantidade(), custoUnit,
+                    "ENTRADA_COMPRA", docRef, 1L);
+        }
+
+        return recebimentoRepo.save(rec);
+    }
+
+    @Transactional
+    public RecebimentoMercadoria uploadXml(Long id, String xml) {
+        RecebimentoMercadoria rec = buscar(id);
+        rec.setXmlNf(xml);
+        return recebimentoRepo.save(rec);
+    }
+}

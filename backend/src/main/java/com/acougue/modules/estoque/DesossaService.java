@@ -21,6 +21,7 @@ public class DesossaService {
     private final FichaDesossaRepository     fichaRepo;
     private final ProcessoDesossaRepository  processoRepo;
     private final EstoqueService             estoqueService;
+    private final RecebimentoRepository      recebimentoRepo;
 
     /**
      * Executa o processo de desossa em uma única transação atômica.
@@ -45,12 +46,18 @@ public class DesossaService {
             "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
 
         // 2. Processar cortes filhos
+        RecebimentoMercadoria recebimento = null;
+        if (dto.getRecebimentoId() != null) {
+            recebimento = recebimentoRepo.findById(dto.getRecebimentoId()).orElse(null);
+        }
+
         ProcessoDesossa processo = ProcessoDesossa.builder()
                 .fichaDesossa(ficha)
                 .quantidadeEntrada(qtdEntrada)
                 .usuarioId(dto.getUsuarioId())
                 .observacao(dto.getObservacao())
                 .status("CONCLUIDO")
+                .recebimento(recebimento)
                 .resultados(new ArrayList<>())
                 .build();
 

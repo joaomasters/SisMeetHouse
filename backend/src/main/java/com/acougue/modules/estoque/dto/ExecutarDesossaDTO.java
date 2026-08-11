@@ -30,4 +30,5 @@ public class ExecutarDesossaDTO {
 
     private Long usuarioId;
     private String observacao;
+    private Long recebimentoId;
 }

@@ -46,4 +46,5 @@ export interface ExecutarDesossaDTO {
   quantidadesReais?: Record<number, number>
   usuarioId?: number
   observacao?: string
+  recebimentoId?: number | null
 }

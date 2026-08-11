@@ -37,6 +37,10 @@ public class ProcessoDesossa {
     @Builder.Default
     private String status = "CONCLUIDO";
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recebimento_id")
+    private RecebimentoMercadoria recebimento;
+
     @OneToMany(mappedBy = "processoDesossa", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ProcessoDesossaResultado> resultados = new ArrayList<>();

@@ -1,9 +1,16 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Scissors, ChevronRight } from 'lucide-react'
+import { Scissors, ChevronRight, Link2 } from 'lucide-react'
 import { api } from '@/shared/api/axios'
 import toast from 'react-hot-toast'
 import type { FichaDesossa, ExecutarDesossaDTO } from '@/types/produto'
+
+interface Recebimento {
+  id: number
+  numeroNf: string | null
+  fornecedor: string
+  dataRecebimento: string
+}
 
 const kg3 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 
@@ -13,10 +20,16 @@ export default function DesossaPage() {
   const [qtdEntrada, setQtdEntrada]     = useState('')
   const [custoPorKg, setCustoPorKg]     = useState('')
   const [qtdsReais, setQtdsReais]       = useState<Record<number, string>>({})
+  const [recebimentoId, setRecebimentoId] = useState('')
 
   const { data: fichas = [] } = useQuery<FichaDesossa[]>({
     queryKey: ['fichas-desossa'],
     queryFn: () => api.get('/estoque/fichas-desossa').then(r => r.data),
+  })
+
+  const { data: recebimentos = [] } = useQuery<Recebimento[]>({
+    queryKey: ['recebimentos'],
+    queryFn: () => api.get('/estoque/recebimentos').then(r => r.data),
   })
 
   const executar = useMutation({
@@ -29,6 +42,7 @@ export default function DesossaPage() {
       setQtdEntrada('')
       setCustoPorKg('')
       setQtdsReais({})
+      setRecebimentoId('')
     },
   })
 
@@ -44,11 +58,13 @@ export default function DesossaPage() {
         return acc
       }, {} as Record<number, number>),
       usuarioId: 1,
+      recebimentoId: recebimentoId ? parseInt(recebimentoId) : null,
     }
     executar.mutate(dto)
   }
 
   const qtdNum = parseFloat(qtdEntrada) || 0
+  const recebSel = recebimentos.find(r => r.id === parseInt(recebimentoId))
 
   return (
     <div className="p-6 max-w-4xl">
@@ -121,6 +137,40 @@ export default function DesossaPage() {
                   placeholder="25.00"
                 />
               </div>
+            </div>
+
+            {/* Casamento com NF de recebimento */}
+            <div>
+              <label className="text-xs font-medium text-gray-600 flex items-center gap-1 mb-1">
+                <Link2 size={12} /> Vincular NF de Recebimento
+              </label>
+              <select
+                value={recebimentoId}
+                onChange={e => {
+                  setRecebimentoId(e.target.value)
+                  if (e.target.value) {
+                    const r = recebimentos.find(r => r.id === parseInt(e.target.value))
+                    if (r && !custoPorKg) {
+                      // custo não preenchido, usuário pode já ter digitado
+                    }
+                  }
+                }}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="">Sem vínculo</option>
+                {recebimentos.map(r => (
+                  <option key={r.id} value={r.id}>
+                    NF {r.numeroNf ?? 'S/N'} — {r.fornecedor}
+                  </option>
+                ))}
+              </select>
+              {recebSel && (
+                <p className="mt-1 text-xs text-blue-600 flex items-center gap-1">
+                  <Link2 size={10} />
+                  Vinculada à NF {recebSel.numeroNf ?? 'S/N'} de {recebSel.fornecedor}
+                </p>
+              )}
             </div>
 
             {/* Itens da ficha com quantidades reais */}

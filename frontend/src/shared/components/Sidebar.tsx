@@ -2,7 +2,8 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   ShoppingCart, Package, Scissors, DollarSign,
   CreditCard, BarChart2, Scale, AlertTriangle,
-  ClipboardList, TrendingDown, ArrowDownCircle, BarChart, LogOut
+  ClipboardList, TrendingDown, ArrowDownCircle, BarChart, LogOut,
+  Truck, FileText
 } from 'lucide-react'
 import clsx from 'clsx'
 import { removeToken } from '../auth'
@@ -12,10 +13,14 @@ const nav = [
   { label: 'Sangria / Suprimento', href: '/pdv/sangria',      icon: ArrowDownCircle },
 
   { separator: 'Estoque' },
-  { label: 'Produtos',    href: '/estoque/produtos',   icon: Package },
-  { label: 'Desossa',     href: '/estoque/desossa',    icon: Scissors },
-  { label: 'Inventário',  href: '/estoque/inventario', icon: ClipboardList },
-  { label: 'Perdas',      href: '/estoque/perdas',     icon: AlertTriangle },
+  { label: 'Produtos',     href: '/estoque/produtos',     icon: Package },
+  { label: 'Recebimento',  href: '/estoque/recebimento',  icon: Truck },
+  { label: 'Desossa',      href: '/estoque/desossa',      icon: Scissors },
+  { label: 'Inventário',   href: '/estoque/inventario',   icon: ClipboardList },
+  { label: 'Perdas',       href: '/estoque/perdas',       icon: AlertTriangle },
+
+  { separator: 'Fiscal' },
+  { label: 'NF de Saída', href: '/fiscal/notas', icon: FileText },
 
   { separator: 'Financeiro' },
   { label: 'Faturamento',      href: '/financeiro/faturamento',    icon: DollarSign },
