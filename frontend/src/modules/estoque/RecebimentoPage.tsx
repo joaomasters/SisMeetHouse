@@ -18,6 +18,7 @@ interface Recebimento {
   valorTotal: number
   status: string
   xmlNf: string | null
+  observacao: string | null
   itens: { id: number; produto: { nome: string; unidadeMedida: string }; quantidade: number; custoUnitario: number; custoTotal: number }[]
 }
 
