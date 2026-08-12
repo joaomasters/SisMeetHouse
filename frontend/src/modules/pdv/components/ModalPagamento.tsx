@@ -444,13 +444,13 @@ export default function ModalPagamento({ totalVenda, vendaId, onConfirmar, onCan
                                    focus:outline-none focus:border-teal-500 tabular-nums disabled:opacity-50"
                       />
                     </div>
-                    {pixSt === 'idle' || pixSt === 'erro' ? (
+                    {(pixSt === 'idle' || pixSt === 'erro') ? (
                       <button
                         onClick={gerarPix}
-                        disabled={!brlP(valor) || pixSt === 'gerando'}
+                        disabled={!brlP(valor)}
                         className="px-4 bg-teal-600 hover:bg-teal-500 rounded-lg font-bold transition-colors disabled:opacity-50"
                       >
-                        {pixSt === 'gerando' ? <Loader2 size={18} className="animate-spin" /> : 'Gerar QR'}
+                        Gerar QR
                       </button>
                     ) : null}
                   </div>
