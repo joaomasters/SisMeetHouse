@@ -48,3 +48,11 @@ acougue:
   nfce:
     ambiente: 2     # 1=Produção, 2=Homologação
     uf: 35          # SP=35, ajuste conforme seu estado
+
+pagamento:
+  pix:
+    # Gere em: https://www.mercadopago.com.br/developers/panel/credentials
+    mp-access-token: ${MP_ACCESS_TOKEN:}
+  stone:
+    # URL do agente Stone TEF instalado localmente (padrão Stone: 12345)
+    agent-url: ${STONE_AGENT_URL:http://localhost:12345}

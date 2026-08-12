@@ -134,6 +134,7 @@ export default function PDVPage() {
       {showPagto && (
         <ModalPagamento
           totalVenda={totalVenda}
+          vendaId={venda?.id}
           onConfirmar={async (pagamentos) => {
             await fecharVenda(pagamentos)
             setShowPagto(false)

@@ -71,6 +71,15 @@ export interface PagamentoDTO {
   valor: number
   nsu?: string
   autorizacao?: string
+  // Stone TEF
+  stoneNsu?: string
+  stoneAuth?: string
+  // PIX
+  pixMpId?: string
+  // Cheque
+  chequeBanco?: string
+  chequeNumero?: string
+  chequeTitular?: string
 }
 
 export interface FecharVendaDTO {
