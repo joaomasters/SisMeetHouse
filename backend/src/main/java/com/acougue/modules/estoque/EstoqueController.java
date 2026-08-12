@@ -2,6 +2,7 @@ package com.acougue.modules.estoque;
 
 import com.acougue.entity.*;
 import com.acougue.modules.estoque.dto.ExecutarDesossaDTO;
+import com.acougue.modules.estoque.dto.FichaDesossaDTO;
 import com.acougue.repository.MovimentacaoEstoqueRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -61,12 +62,45 @@ public class EstoqueController {
         return ResponseEntity.ok(produtoService.alertasEstoqueMinimo());
     }
 
-    // ── Desossa ───────────────────────────────────────────────
+    // ── Fichas de Desossa ──────────────────────────────────────
 
     @GetMapping("/fichas-desossa")
-    public ResponseEntity<List<FichaDesossa>> listarFichas() {
-        return ResponseEntity.ok(desossaService.listarFichas());
+    public ResponseEntity<List<FichaDesossa>> listarFichas(
+            @RequestParam(defaultValue = "false") boolean todas) {
+        return ResponseEntity.ok(todas
+                ? desossaService.listarTodasFichas()
+                : desossaService.listarFichas());
     }
+
+    @GetMapping("/fichas-desossa/{id}")
+    public ResponseEntity<FichaDesossa> buscarFicha(@PathVariable Long id) {
+        return ResponseEntity.ok(desossaService.buscarFicha(id));
+    }
+
+    @PostMapping("/fichas-desossa")
+    public ResponseEntity<FichaDesossa> criarFicha(@RequestBody FichaDesossaDTO dto) {
+        return ResponseEntity.ok(desossaService.criarFicha(dto));
+    }
+
+    @PutMapping("/fichas-desossa/{id}")
+    public ResponseEntity<FichaDesossa> atualizarFicha(
+            @PathVariable Long id, @RequestBody FichaDesossaDTO dto) {
+        return ResponseEntity.ok(desossaService.atualizarFicha(id, dto));
+    }
+
+    @DeleteMapping("/fichas-desossa/{id}")
+    public ResponseEntity<Void> inativarFicha(@PathVariable Long id) {
+        desossaService.inativarFicha(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/fichas-desossa/{id}/reativar")
+    public ResponseEntity<FichaDesossa> reativarFicha(@PathVariable Long id) {
+        desossaService.reativarFicha(id);
+        return ResponseEntity.ok(desossaService.buscarFicha(id));
+    }
+
+    // ── Execução de Desossa ────────────────────────────────────
 
     @PostMapping("/desossa/executar")
     public ResponseEntity<ProcessoDesossa> executarDesossa(

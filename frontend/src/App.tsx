@@ -15,6 +15,7 @@ import DrePage from './modules/financeiro/DrePage'
 import RelatoriosPage from './modules/financeiro/RelatoriosPage'
 import CargaBalancaPage from './modules/balanca/CargaBalancaPage'
 import RecebimentoPage from './modules/estoque/RecebimentoPage'
+import FichasDesossaPage from './modules/estoque/FichasDesossaPage'
 import NotaFiscalPage from './modules/fiscal/NotaFiscalPage'
 
 export default function App() {
@@ -38,7 +39,8 @@ export default function App() {
             <Route path="/estoque/desossa"           element={<DesossaPage />} />
             <Route path="/estoque/inventario"        element={<InventarioPage />} />
             <Route path="/estoque/perdas"            element={<PerdasPage />} />
-            <Route path="/estoque/recebimento"       element={<RecebimentoPage />} />
+            <Route path="/estoque/recebimento"         element={<RecebimentoPage />} />
+            <Route path="/estoque/fichas-desossa"     element={<FichasDesossaPage />} />
             <Route path="/fiscal/notas"              element={<NotaFiscalPage />} />
             <Route path="/financeiro/faturamento"    element={<FaturamentoPage />} />
             <Route path="/financeiro/contas-receber" element={<ContasReceberPage />} />
