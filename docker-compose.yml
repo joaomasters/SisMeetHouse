@@ -19,7 +19,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U acougue -d acougue_db"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   # ── Backend Spring Boot ─────────────────────────────────────────
   backend:
@@ -40,10 +41,11 @@ services:
     ports:
       - "8080:8080"       # remove em produção se usar só pelo nginx
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/api/estoque/produtos || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ── Frontend React (Nginx) ──────────────────────────────────────
   frontend:
