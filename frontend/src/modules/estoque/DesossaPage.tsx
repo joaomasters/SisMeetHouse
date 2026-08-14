@@ -10,6 +10,7 @@ interface Recebimento {
   numeroNf: string | null
   fornecedor: string
   dataRecebimento: string
+  itens: { produto: { id: number; nome: string }; quantidade: number; custoUnitario: number }[]
 }
 
 const kg3 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
@@ -21,6 +22,15 @@ export default function DesossaPage() {
   const [custoPorKg, setCustoPorKg]     = useState('')
   const [qtdsReais, setQtdsReais]       = useState<Record<number, string>>({})
   const [recebimentoId, setRecebimentoId] = useState('')
+  const [preenchidoPelaNf, setPreenchidoPelaNf] = useState(false)
+
+  const { data: saldoNf } = useQuery<number>({
+    queryKey: ['saldo-nf', recebimentoId, fichaSel?.produtoPai.id],
+    queryFn: () => api.get('/estoque/desossa/saldo-nf', {
+      params: { recebimentoId, produtoPaiId: fichaSel!.produtoPai.id },
+    }).then(r => r.data),
+    enabled: !!recebimentoId && !!fichaSel,
+  })
 
   const { data: fichas = [] } = useQuery<FichaDesossa[]>({
     queryKey: ['fichas-desossa'],
@@ -43,6 +53,7 @@ export default function DesossaPage() {
       setCustoPorKg('')
       setQtdsReais({})
       setRecebimentoId('')
+      setPreenchidoPelaNf(false)
     },
   })
 
@@ -116,22 +127,26 @@ export default function DesossaPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-gray-600 block mb-1">Quantidade (kg) *</label>
+                <label className="text-xs font-medium text-gray-600 block mb-1">
+                  Quantidade (kg) *{preenchidoPelaNf && <span className="text-blue-600 font-normal"> (da NF)</span>}
+                </label>
                 <input
                   type="number" step="0.001" min="0.001"
                   value={qtdEntrada}
-                  onChange={e => setQtdEntrada(e.target.value)}
+                  onChange={e => { setQtdEntrada(e.target.value); setPreenchidoPelaNf(false) }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
                              focus:outline-none focus:ring-2 focus:ring-red-500"
                   placeholder="100.000"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 block mb-1">Custo / kg (R$)</label>
+                <label className="text-xs font-medium text-gray-600 block mb-1">
+                  Custo / kg (R$){preenchidoPelaNf && <span className="text-blue-600 font-normal"> (da NF)</span>}
+                </label>
                 <input
                   type="number" step="0.01"
                   value={custoPorKg}
-                  onChange={e => setCustoPorKg(e.target.value)}
+                  onChange={e => { setCustoPorKg(e.target.value); setPreenchidoPelaNf(false) }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
                              focus:outline-none focus:ring-2 focus:ring-red-500"
                   placeholder="25.00"
@@ -150,9 +165,18 @@ export default function DesossaPage() {
                   setRecebimentoId(e.target.value)
                   if (e.target.value) {
                     const r = recebimentos.find(r => r.id === parseInt(e.target.value))
-                    if (r && !custoPorKg) {
-                      // custo não preenchido, usuário pode já ter digitado
+                    const itemPai = r?.itens.find(i => i.produto.id === fichaSel.produtoPai.id)
+                    if (itemPai) {
+                      setQtdEntrada(String(itemPai.quantidade))
+                      setCustoPorKg(String(itemPai.custoUnitario))
+                      setPreenchidoPelaNf(true)
+                    } else if (r) {
+                      toast.error(
+                        `A NF ${r.numeroNf ?? 'S/N'} não tem item de "${fichaSel.produtoPai.nome}". Preencha manualmente.`
+                      )
                     }
+                  } else {
+                    setPreenchidoPelaNf(false)
                   }
                 }}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
@@ -169,6 +193,11 @@ export default function DesossaPage() {
                 <p className="mt-1 text-xs text-blue-600 flex items-center gap-1">
                   <Link2 size={10} />
                   Vinculada à NF {recebSel.numeroNf ?? 'S/N'} de {recebSel.fornecedor}
+                </p>
+              )}
+              {recebimentoId && saldoNf !== undefined && (
+                <p className={`mt-1 text-xs font-medium ${saldoNf > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  Saldo disponível nessa NF: {kg3(saldoNf)} kg
                 </p>
               )}
             </div>
@@ -206,9 +235,15 @@ export default function DesossaPage() {
               </div>
             </div>
 
+            {recebimentoId && saldoNf !== undefined && qtdNum > saldoNf && (
+              <p className="text-xs text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                Quantidade acima do saldo disponível na NF ({kg3(saldoNf)} kg).
+              </p>
+            )}
+
             <button
               onClick={handleExecutar}
-              disabled={!qtdEntrada || executar.isPending}
+              disabled={!qtdEntrada || executar.isPending || (recebimentoId !== '' && saldoNf !== undefined && qtdNum > saldoNf)}
               className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium
                          disabled:opacity-60 transition-colors"
             >

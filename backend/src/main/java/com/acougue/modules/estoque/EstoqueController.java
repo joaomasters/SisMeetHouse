@@ -108,6 +108,12 @@ public class EstoqueController {
         return ResponseEntity.ok(desossaService.executarDesossa(dto));
     }
 
+    @GetMapping("/desossa/saldo-nf")
+    public ResponseEntity<java.math.BigDecimal> saldoNf(
+            @RequestParam Long recebimentoId, @RequestParam Long produtoPaiId) {
+        return ResponseEntity.ok(desossaService.saldoDisponivelNf(recebimentoId, produtoPaiId));
+    }
+
     @GetMapping("/desossa/historico/{fichaId}")
     public ResponseEntity<List<ProcessoDesossa>> historicoDesossa(@PathVariable Long fichaId) {
         return ResponseEntity.ok(desossaService.listarPorFicha(fichaId));

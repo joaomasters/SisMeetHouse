@@ -10,4 +10,6 @@ import java.util.List;
 public interface ProcessoDesossaRepository extends JpaRepository<ProcessoDesossa, Long> {
 
     List<ProcessoDesossa> findByFichaDesossaIdOrderByDataProcessoDesc(Long fichaDesossaId);
+
+    List<ProcessoDesossa> findByRecebimentoId(Long recebimentoId);
 }

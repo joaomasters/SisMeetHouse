@@ -43,15 +43,23 @@ public class DesossaService {
         BigDecimal custoTotalBruto = qtdEntrada.multiply(custoPorKg);
         Map<Long, BigDecimal> reais = dto.getQuantidadesReais();
 
-        // 1. Baixar produto pai
-        estoqueService.saida(produtoPai, qtdEntrada, "SAIDA_DESOSSA",
-            "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
-
-        // 2. Processar cortes filhos
+        // 2. Se vinculado a uma NF, validar que a quantidade não estoura o saldo daquela nota
         RecebimentoMercadoria recebimento = null;
         if (dto.getRecebimentoId() != null) {
-            recebimento = recebimentoRepo.findById(dto.getRecebimentoId()).orElse(null);
+            recebimento = recebimentoRepo.findById(dto.getRecebimentoId())
+                    .orElseThrow(() -> new BusinessException("NF de recebimento não encontrada: " + dto.getRecebimentoId()));
+
+            BigDecimal saldo = calcularSaldoNf(recebimento, produtoPai);
+            if (qtdEntrada.compareTo(saldo) > 0) {
+                throw new BusinessException(String.format(
+                        "Quantidade (%.3f kg) maior que o saldo disponível na NF %s para '%s' (%.3f kg restantes).",
+                        qtdEntrada, recebimento.getNumeroNf(), produtoPai.getNome(), saldo));
+            }
         }
+
+        // 1. Baixar produto pai
+        estoqueService.saida(produtoPai, qtdEntrada, "SAIDA_DESOSSA",
+                "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
 
         ProcessoDesossa processo = ProcessoDesossa.builder()
                 .fichaDesossa(ficha)
@@ -79,7 +87,7 @@ public class DesossaService {
                     : BigDecimal.ZERO;
 
             estoqueService.entrada(item.getProdutoFilho(), qtdReal, custoUnitFilho,
-                "ENTRADA_DESOSSA", "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
+                    "ENTRADA_DESOSSA", "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
 
             ProcessoDesossaResultado resultado = ProcessoDesossaResultado.builder()
                     .processoDesossa(processo)
@@ -92,6 +100,36 @@ public class DesossaService {
         }
 
         return processoRepo.save(processo);
+    }
+
+    /**
+     * Saldo ainda disponível de um produto pai numa NF específica:
+     * quantidade recebida naquele item da nota MENOS o que já foi processado
+     * em desossas anteriores vinculadas a essa mesma NF.
+     * Evita desossar mais do que a nota trouxe, ou processar a mesma nota duas vezes.
+     */
+    public BigDecimal calcularSaldoNf(RecebimentoMercadoria recebimento, Produto produtoPai) {
+        BigDecimal qtdNf = recebimento.getItens().stream()
+                .filter(item -> item.getProduto().getId().equals(produtoPai.getId()))
+                .map(RecebimentoItem::getQuantidade)
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(
+                        "A NF " + recebimento.getNumeroNf() + " não possui item de '" + produtoPai.getNome() + "'."));
+
+        BigDecimal jaProcessado = processoRepo.findByRecebimentoId(recebimento.getId()).stream()
+                .filter(p -> p.getFichaDesossa().getProdutoPai().getId().equals(produtoPai.getId()))
+                .map(ProcessoDesossa::getQuantidadeEntrada)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return qtdNf.subtract(jaProcessado);
+    }
+
+    public BigDecimal saldoDisponivelNf(Long recebimentoId, Long produtoPaiId) {
+        RecebimentoMercadoria recebimento = recebimentoRepo.findById(recebimentoId)
+                .orElseThrow(() -> new BusinessException("NF de recebimento não encontrada: " + recebimentoId));
+        Produto produtoPai = produtoRepo.findById(produtoPaiId)
+                .orElseThrow(() -> new BusinessException("Produto não encontrado: " + produtoPaiId));
+        return calcularSaldoNf(recebimento, produtoPai);
     }
 
     public List<ProcessoDesossa> listarPorFicha(Long fichaId) {
