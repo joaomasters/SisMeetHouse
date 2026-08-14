@@ -9,6 +9,11 @@ import ProdutoForm from './components/ProdutoForm'
 const brl  = (v?: number) => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const qtd3 = (v: number)  => v.toLocaleString('pt-BR', { minimumFractionDigits: 3 })
 
+function margemPct(custo?: number, venda?: number): number | null {
+  if (!custo || custo <= 0 || !venda) return null
+  return ((venda - custo) / venda) * 100
+}
+
 export default function ProdutosPage() {
   const qc      = useQueryClient()
   const [busca, setBusca]   = useState('')
@@ -75,7 +80,9 @@ export default function ProdutosPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Código</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Nome</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Un.</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Custo Médio</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Preço Venda</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Margem</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Estoque</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">PLU</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
@@ -95,7 +102,18 @@ export default function ProdutosPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-gray-500">{p.unidadeMedida}</td>
+                  <td className="px-4 py-3 text-right text-gray-500 tabular-nums">
+                    {p.precoCusto ? brl(p.precoCusto) : '—'}
+                  </td>
                   <td className="px-4 py-3 text-right font-medium tabular-nums">{brl(p.precoVenda)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {(() => {
+                      const m = margemPct(p.precoCusto, p.precoVenda)
+                      if (m === null) return <span className="text-gray-400">—</span>
+                      const cor = m < 15 ? 'text-red-600' : m < 30 ? 'text-orange-500' : 'text-emerald-600'
+                      return <span className={`font-semibold ${cor}`}>{m.toFixed(1)}%</span>
+                    })()}
+                  </td>
                   <td className={`px-4 py-3 text-right tabular-nums font-medium
                     ${p.estoqueAtual <= p.estoqueMinimo ? 'text-orange-600' : 'text-gray-700'}`}>
                     {qtd3(p.estoqueAtual)} {p.unidadeMedida}
