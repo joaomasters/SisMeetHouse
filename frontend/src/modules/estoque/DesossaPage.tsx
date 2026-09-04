@@ -81,7 +81,7 @@ export default function DesossaPage() {
     <div className="p-6 max-w-4xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Scissors size={24} className="text-red-600" /> Desossa / Rendimento
+          <Scissors size={24} className="text-red-600" /> Rateio de Desossa
         </h1>
         <p className="text-gray-500 text-sm mt-0.5">
           Processa peças inteiras em cortes filhos com rateio automático de custo

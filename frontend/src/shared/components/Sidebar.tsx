@@ -16,7 +16,7 @@ const nav = [
   { label: 'Produtos',     href: '/estoque/produtos',     icon: Package },
   { label: 'Recebimento',       href: '/estoque/recebimento',       icon: Truck },
   { label: 'Fichas Desossa',    href: '/estoque/fichas-desossa',    icon: ClipboardList },
-  { label: 'Desossa',           href: '/estoque/desossa',           icon: Scissors },
+  { label: 'Rateio de Desossa',           href: '/estoque/desossa',           icon: Scissors },
   { label: 'Inventário',   href: '/estoque/inventario',   icon: ClipboardList },
   { label: 'Perdas',       href: '/estoque/perdas',       icon: AlertTriangle },
 
