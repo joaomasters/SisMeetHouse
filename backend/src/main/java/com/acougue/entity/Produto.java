@@ -43,7 +43,7 @@ public class Produto {
 
     @Column(name = "tipo_produto", nullable = false, length = 20)
     @NotBlank
-    private String tipoProduto; // CORTE, INDUSTRIALIZADO, INSUMO, SUBPRODUTO
+    private String tipoProduto; // CORTE, INDUSTRIALIZADO, INSUMO, SUBPRODUTO, BEBIDA
 
     @Column(name = "preco_custo", precision = 12, scale = 4)
     private BigDecimal precoCusto;
