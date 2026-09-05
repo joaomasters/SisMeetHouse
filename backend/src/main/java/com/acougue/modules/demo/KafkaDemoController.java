@@ -37,7 +37,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/demo/kafka")
+@RequestMapping("/demo/kafka")
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
 public class KafkaDemoController {
