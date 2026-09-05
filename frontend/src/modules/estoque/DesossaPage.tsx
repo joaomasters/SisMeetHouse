@@ -81,7 +81,7 @@ export default function DesossaPage() {
     <div className="p-6 max-w-4xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Scissors size={24} className="text-red-600" /> Rateio de Desossa
+          <Scissors size={24} className="text-red-600" /> Desossa / Rendimento
         </h1>
         <p className="text-gray-500 text-sm mt-0.5">
           Processa peças inteiras em cortes filhos com rateio automático de custo
@@ -133,11 +133,15 @@ export default function DesossaPage() {
                 <input
                   type="number" step="0.001" min="0.001"
                   value={qtdEntrada}
-                  onChange={e => { setQtdEntrada(e.target.value); setPreenchidoPelaNf(false) }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-red-500"
+                  disabled={preenchidoPelaNf}
+                  onChange={e => setQtdEntrada(e.target.value)}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500
+                    ${preenchidoPelaNf ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'border-gray-300'}`}
                   placeholder="100.000"
                 />
+                {preenchidoPelaNf && (
+                  <p className="text-[11px] text-gray-400 mt-1">Vem da NF — desvincule para editar manualmente.</p>
+                )}
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-600 block mb-1">
@@ -146,9 +150,10 @@ export default function DesossaPage() {
                 <input
                   type="number" step="0.01"
                   value={custoPorKg}
-                  onChange={e => { setCustoPorKg(e.target.value); setPreenchidoPelaNf(false) }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-red-500"
+                  disabled={preenchidoPelaNf}
+                  onChange={e => setCustoPorKg(e.target.value)}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500
+                    ${preenchidoPelaNf ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'border-gray-300'}`}
                   placeholder="25.00"
                 />
               </div>
