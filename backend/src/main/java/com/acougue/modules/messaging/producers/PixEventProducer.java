@@ -8,11 +8,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-/**
- * Publica PixConfirmadoEvent quando o webhook do Mercado Pago confirma o PIX.
- * Permite que o PDV receba a confirmação em tempo real via WebSocket/SSE
- * (subscriber futuro) em vez de fazer polling.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor

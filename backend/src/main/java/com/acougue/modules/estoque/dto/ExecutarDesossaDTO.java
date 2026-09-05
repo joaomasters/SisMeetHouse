@@ -25,7 +25,7 @@ public class ExecutarDesossaDTO {
 
     private BigDecimal custoPorKg;
 
-    // Mapa produtoFilhoId → quantidade real obtida na pesagem (opcional)
+    
     private Map<Long, BigDecimal> quantidadesReais;
 
     private Long usuarioId;

@@ -40,7 +40,7 @@ public class ContasPagar {
 
     @Builder.Default
     @Column(nullable = false, length = 20)
-    private String status = "ABERTO"; // ABERTO, PAGO, PARCIAL, CANCELADO
+    private String status = "ABERTO"; 
 
     @Column(columnDefinition = "TEXT")
     private String observacao;

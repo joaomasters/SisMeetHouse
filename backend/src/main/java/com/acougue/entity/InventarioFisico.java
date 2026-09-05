@@ -18,7 +18,7 @@ public class InventarioFisico {
 
     @Builder.Default
     @Column(nullable = false, length = 20)
-    private String status = "ABERTO"; // ABERTO, FINALIZADO, CANCELADO
+    private String status = "ABERTO"; 
 
     @Column(columnDefinition = "TEXT")
     private String observacao;

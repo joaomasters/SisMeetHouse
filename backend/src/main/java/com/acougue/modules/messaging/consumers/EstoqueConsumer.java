@@ -12,14 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
-/**
- * Consome VendaFechadaEvent e verifica se algum produto ficou abaixo do
- * estoque mínimo após a venda. Se sim, publica AlertaEstoqueEvent.
- *
- * Responsabilidades:
- *  - Auditoria: log de cada venda processada
- *  - Alertas: detecta itens abaixo do mínimo e delega ao AlertaEventProducer
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -44,10 +36,10 @@ public class EstoqueConsumer {
 
     public void verificarAlerta(VendaFechadaEvent.ItemEvent item) {
         BigDecimal minimo = item.estoqueMinimo() != null ? item.estoqueMinimo() : BigDecimal.ZERO;
-        if (minimo.compareTo(BigDecimal.ZERO) <= 0) return; // sem mínimo configurado, ignora
+        if (minimo.compareTo(BigDecimal.ZERO) <= 0) return; 
 
         if (item.estoqueAposVenda().compareTo(minimo) < 0) {
-            BigDecimal deficit = item.estoqueAposVenda().subtract(minimo); // negativo
+            BigDecimal deficit = item.estoqueAposVenda().subtract(minimo); 
             alertaProducer.publicarAlerta(new AlertaEstoqueEvent(
                     item.produtoId(),
                     item.nomeProduto(),

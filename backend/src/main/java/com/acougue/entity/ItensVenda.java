@@ -45,5 +45,5 @@ public class ItensVenda {
     private BigDecimal custoItem;
 
     @Column(name = "tipo_entrada", length = 20)
-    private String tipoEntrada; // BARCODE, PESAGEM_DIRETA, MANUAL
+    private String tipoEntrada; 
 }

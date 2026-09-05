@@ -25,13 +25,8 @@ public class DesossaService {
     private final RecebimentoRepository      recebimentoRepo;
     private final ProdutoRepository          produtoRepo;
 
-    /**
-     * Executa o processo de desossa em uma única transação atômica.
-     * 1. Valida estoque do produto pai
-     * 2. Baixa o produto pai
-     * 3. Calcula e entra cada corte filho com custo rateado
-     * 4. Grava o registro do processo para rastreabilidade
-     */
+    
+
     @Transactional
     public ProcessoDesossa executarDesossa(ExecutarDesossaDTO dto) {
         FichaDesossa ficha = fichaRepo.findById(dto.getFichaDesossaId())
@@ -43,7 +38,7 @@ public class DesossaService {
         BigDecimal custoTotalBruto = qtdEntrada.multiply(custoPorKg);
         Map<Long, BigDecimal> reais = dto.getQuantidadesReais();
 
-        // 2. Se vinculado a uma NF, validar que a quantidade não estoura o saldo daquela nota
+        
         RecebimentoMercadoria recebimento = null;
         if (dto.getRecebimentoId() != null) {
             recebimento = recebimentoRepo.findById(dto.getRecebimentoId())
@@ -57,8 +52,8 @@ public class DesossaService {
             }
         }
 
-        // 1ª passada: calcula previsto/real/custo de cada corte SEM mexer em estoque ainda,
-        // para poder validar tudo antes de qualquer efeito colateral.
+        
+        
         record CorteCalculado(FichaDesossaItem item, BigDecimal qtdPrevista, BigDecimal qtdReal, BigDecimal custoRateado) {}
         List<CorteCalculado> calculados = new ArrayList<>();
         BigDecimal somaReais = BigDecimal.ZERO;
@@ -82,8 +77,8 @@ public class DesossaService {
             somaReais = somaReais.add(qtdReal);
         }
 
-        // Trava dura: a soma dos cortes reais nunca pode ultrapassar a quantidade de entrada
-        // (que já foi validada contra o saldo da NF vinculada, se houver). Sem margem de tolerância.
+        
+        
         if (somaReais.compareTo(qtdEntrada) > 0) {
             throw new BusinessException(String.format(
                 "A soma dos cortes reais (%.3f kg) ultrapassa a quantidade de entrada (%.3f kg). " +
@@ -91,7 +86,7 @@ public class DesossaService {
                 somaReais, qtdEntrada));
         }
 
-        // 1. Baixar produto pai
+        
         estoqueService.saida(produtoPai, qtdEntrada, "SAIDA_DESOSSA",
             "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
 
@@ -105,7 +100,7 @@ public class DesossaService {
                 .resultados(new ArrayList<>())
                 .build();
 
-        // 2ª passada: agora sim, executa as entradas de estoque de cada corte já validado
+        
         for (CorteCalculado c : calculados) {
             BigDecimal custoUnitFilho = c.qtdReal().compareTo(BigDecimal.ZERO) > 0
                     ? c.custoRateado().divide(c.qtdReal(), 4, RoundingMode.HALF_UP)
@@ -127,12 +122,8 @@ public class DesossaService {
         return processoRepo.save(processo);
     }
 
-    /**
-     * Saldo ainda disponível de um produto pai numa NF específica:
-     * quantidade recebida naquele item da nota MENOS o que já foi processado
-     * em desossas anteriores vinculadas a essa mesma NF.
-     * Evita desossar mais do que a nota trouxe, ou processar a mesma nota duas vezes.
-     */
+    
+
     public BigDecimal calcularSaldoNf(RecebimentoMercadoria recebimento, Produto produtoPai) {
         BigDecimal qtdNf = recebimento.getItens().stream()
                 .filter(item -> item.getProduto().getId().equals(produtoPai.getId()))
@@ -203,7 +194,7 @@ public class DesossaService {
         if (dto.nome() != null)      ficha.setNome(dto.nome());
         if (dto.descricao() != null) ficha.setDescricao(dto.descricao());
 
-        // Substitui todos os itens (cascade + orphanRemoval cuida do DELETE)
+        
         ficha.getItens().clear();
         adicionarItens(ficha, dto.itens());
 
@@ -224,7 +215,7 @@ public class DesossaService {
         fichaRepo.save(ficha);
     }
 
-    // ── helper ────────────────────────────────────────────────────────────────
+    
 
     private void adicionarItens(FichaDesossa ficha, List<FichaDesossaDTO.ItemDTO> itemDtos) {
         if (itemDtos == null || itemDtos.isEmpty()) return;
@@ -248,7 +239,7 @@ public class DesossaService {
             seq++;
         }
 
-        // Perda = 100% - soma dos rendimentos (pode ser 0 se render tudo)
+        
         BigDecimal perda = BigDecimal.valueOf(100).subtract(totalPerc);
         ficha.setPerdaTotalPercentual(perda.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : perda);
     }

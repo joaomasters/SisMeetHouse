@@ -1,11 +1,4 @@
--- =====================================================================
--- V1 — Schema inicial do sistema ERP/PDV para Açougues
--- Banco: PostgreSQL 15
--- =====================================================================
 
--- ─────────────────────────────────────────────────────────────────────
--- CATEGORIAS
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE categorias (
     id          BIGSERIAL    PRIMARY KEY,
     nome        VARCHAR(100) NOT NULL,
@@ -13,9 +6,6 @@ CREATE TABLE categorias (
     created_at  TIMESTAMP    DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- PRODUTOS
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE produtos (
     id                BIGSERIAL    PRIMARY KEY,
     codigo_interno    VARCHAR(20)  UNIQUE NOT NULL,
@@ -41,9 +31,6 @@ CREATE TABLE produtos (
 CREATE INDEX idx_produto_codigo_balanca ON produtos(codigo_balanca);
 CREATE INDEX idx_produto_ean13          ON produtos(ean13);
 
--- ─────────────────────────────────────────────────────────────────────
--- CARGA BALANÇA
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE carga_balanca (
     id             BIGSERIAL   PRIMARY KEY,
     produto_id     BIGINT      NOT NULL REFERENCES produtos(id),
@@ -57,9 +44,6 @@ CREATE TABLE carga_balanca (
                     CHECK (status IN ('PENDENTE','ENVIADO','ERRO'))
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- FICHA DE DESOSSA
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE ficha_desossa (
     id                      BIGSERIAL    PRIMARY KEY,
     produto_pai_id          BIGINT       NOT NULL REFERENCES produtos(id),
@@ -78,9 +62,6 @@ CREATE TABLE ficha_desossa_itens (
     sequencia             INTEGER     DEFAULT 0
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- MOVIMENTAÇÃO DE ESTOQUE
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE movimentacao_estoque (
     id                BIGSERIAL   PRIMARY KEY,
     produto_id        BIGINT      NOT NULL REFERENCES produtos(id),
@@ -99,9 +80,6 @@ CREATE TABLE movimentacao_estoque (
 
 CREATE INDEX idx_mov_produto_data ON movimentacao_estoque(produto_id, created_at DESC);
 
--- ─────────────────────────────────────────────────────────────────────
--- PROCESSO DE DESOSSA (execução real)
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE processo_desossa (
     id                BIGSERIAL   PRIMARY KEY,
     ficha_desossa_id  BIGINT      NOT NULL REFERENCES ficha_desossa(id),
@@ -121,9 +99,6 @@ CREATE TABLE processo_desossa_resultado (
     custo_rateado       NUMERIC(12,4)
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- CLIENTES
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE clientes (
     id             BIGSERIAL    PRIMARY KEY,
     nome           VARCHAR(150) NOT NULL,
@@ -140,9 +115,6 @@ CREATE TABLE clientes (
     created_at     TIMESTAMP    DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- CAIXA
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE caixa (
     id                          BIGSERIAL   PRIMARY KEY,
     operador_id                 BIGINT,
@@ -156,9 +128,6 @@ CREATE TABLE caixa (
     observacao                  TEXT
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- VENDAS
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE vendas (
     id           BIGSERIAL   PRIMARY KEY,
     numero_cupom VARCHAR(20),
@@ -181,9 +150,6 @@ CREATE TABLE vendas (
 
 CREATE INDEX idx_vendas_data_status ON vendas(data_venda DESC, status);
 
--- ─────────────────────────────────────────────────────────────────────
--- ITENS DE VENDA
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE itens_venda (
     id             BIGSERIAL     PRIMARY KEY,
     venda_id       BIGINT        NOT NULL REFERENCES vendas(id),
@@ -200,9 +166,6 @@ CREATE TABLE itens_venda (
 
 CREATE INDEX idx_itens_venda_venda ON itens_venda(venda_id);
 
--- ─────────────────────────────────────────────────────────────────────
--- PAGAMENTOS DE VENDA
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE pagamentos_venda (
     id              BIGSERIAL     PRIMARY KEY,
     venda_id        BIGINT        NOT NULL REFERENCES vendas(id),
@@ -215,9 +178,6 @@ CREATE TABLE pagamentos_venda (
     data_pagamento  TIMESTAMP     DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- FATURAMENTO DE CLIENTES
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE faturamento_cliente (
     id              BIGSERIAL     PRIMARY KEY,
     cliente_id      BIGINT        NOT NULL REFERENCES clientes(id),
@@ -234,9 +194,6 @@ CREATE TABLE faturamento_cliente (
     updated_at      TIMESTAMP     DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- CONTAS A RECEBER
--- ─────────────────────────────────────────────────────────────────────
 CREATE TABLE contas_a_receber (
     id              BIGSERIAL     PRIMARY KEY,
     cliente_id      BIGINT        NOT NULL REFERENCES clientes(id),
@@ -255,9 +212,6 @@ CREATE TABLE contas_a_receber (
 
 CREATE INDEX idx_contas_cliente_status ON contas_a_receber(cliente_id, status);
 
--- ─────────────────────────────────────────────────────────────────────
--- DADOS INICIAIS (seed)
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO categorias (nome) VALUES
     ('Bovino'),
     ('Suíno'),

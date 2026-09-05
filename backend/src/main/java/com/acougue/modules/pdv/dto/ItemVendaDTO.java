@@ -18,6 +18,6 @@ public class ItemVendaDTO {
     private BigDecimal quantidade;
     private BigDecimal precoUnitario;
     private BigDecimal totalItem;
-    private String tipoEntrada; // BARCODE, PESAGEM_DIRETA, MANUAL
+    private String tipoEntrada; 
     private String ean13Lido;
 }

@@ -1,11 +1,4 @@
--- =====================================================================
--- V3 — Seed de dados realistas para demonstração
--- Categorias IDs 1-6 e Cliente ID 1 já existem (V1)
--- =====================================================================
 
--- ─────────────────────────────────────────────────────────────────────
--- CLIENTES
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO clientes (id, nome, cpf_cnpj, tipo_pessoa, telefone, tipo_cliente, limite_credito, saldo_fiado_atual) VALUES
 (2, 'João Silva',        '123.456.789-00',    'PF', '(11) 98765-4321', 'VAREJO',       500.00,  120.50),
 (3, 'Maria Oliveira',    '987.654.321-00',    'PF', '(11) 91234-5678', 'VAREJO',       300.00,    0.00),
@@ -16,9 +9,6 @@ INSERT INTO clientes (id, nome, cpf_cnpj, tipo_pessoa, telefone, tipo_cliente, l
 (8, 'Ana Santos',        '444.555.666-77',    'PF', '(11) 96543-2109', 'VAREJO',       150.00,    0.00);
 SELECT setval('clientes_id_seq', 8);
 
--- ─────────────────────────────────────────────────────────────────────
--- PRODUTOS
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO produtos (id, codigo_interno, codigo_balanca, nome, unidade_medida, tipo_produto,
                       preco_custo, preco_venda, estoque_atual, estoque_minimo, categoria_id, tem_ficha_desossa) VALUES
 (1,  'BOV001',  1,  'Picanha',               'KG', 'CORTE',           35.00,  69.90,  45.50,  5.0, 1, FALSE),
@@ -47,9 +37,6 @@ INSERT INTO produtos (id, codigo_interno, codigo_balanca, nome, unidade_medida, 
 (24, 'SUB002', 52,  'Osso para Caldo',       'KG', 'SUBPRODUTO',       2.00,   5.90,  22.40,  3.0, 6, FALSE);
 SELECT setval('produtos_id_seq', 24);
 
--- ─────────────────────────────────────────────────────────────────────
--- CAIXA
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO caixa (id, operador_id, data_abertura, data_fechamento, valor_abertura,
                    valor_fechamento_informado, valor_calculado, status, total_sangria, total_suprimento) VALUES
 (1, 1, NOW()-INTERVAL'30 days', NOW()-INTERVAL'29 days 20 hours', 500.00, 3850.00, 3862.50, 'FECHADO', 200.00,   0.00),
@@ -58,9 +45,6 @@ INSERT INTO caixa (id, operador_id, data_abertura, data_fechamento, valor_abertu
 (4, 1, NOW()-INTERVAL'1 day',   NULL,                             500.00, NULL,    NULL,    'ABERTO',    0.00,   0.00);
 SELECT setval('caixa_id_seq', 4);
 
--- ─────────────────────────────────────────────────────────────────────
--- SANGRIA E SUPRIMENTO
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO sangria_caixa (id, caixa_id, tipo, valor, motivo, operador_id, created_at) VALUES
 (1, 1, 'SANGRIA',    200.00, 'Retirada para cofre',       1, NOW()-INTERVAL'29 days 15 hours'),
 (2, 2, 'SANGRIA',    150.00, 'Retirada diaria',           1, NOW()-INTERVAL'14 days 16 hours'),
@@ -70,9 +54,6 @@ INSERT INTO sangria_caixa (id, caixa_id, tipo, valor, motivo, operador_id, creat
 (6, 3, 'SUPRIMENTO',  50.00, 'Reposicao troco quebrado',  1, NOW()-INTERVAL'7 days 11 hours');
 SELECT setval('sangria_caixa_id_seq', 6);
 
--- ─────────────────────────────────────────────────────────────────────
--- VENDAS
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO vendas (id, numero_cupom, cliente_id, tipo_venda, status,
                     subtotal, desconto, total, troco, data_venda, operador_id, caixa_id) VALUES
 (1,  'PDV-001001', 1, 'PDV',         'FECHADA',  125.60,   0.00,  125.60,  4.40, NOW()-INTERVAL'29 days 10 hours', 1, 1),
@@ -97,9 +78,6 @@ INSERT INTO vendas (id, numero_cupom, cliente_id, tipo_venda, status,
 (20, 'PDV-001017', 3, 'PDV',         'FECHADA',  312.60,  12.60,  300.00,  0.00, NOW()-INTERVAL'1 day 11 hours',   1, 4);
 SELECT setval('vendas_id_seq', 20);
 
--- ─────────────────────────────────────────────────────────────────────
--- ITENS DE VENDA
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO itens_venda (venda_id, produto_id, quantidade, preco_unitario, desconto_item, total_item, custo_item, tipo_entrada) VALUES
 (1,  1,  0.850, 69.90, 0.00,  59.42, 35.00, 'PESAGEM_DIRETA'),
 (1, 18,  2.500, 13.90, 0.00,  34.75,  7.00, 'PESAGEM_DIRETA'),
@@ -156,9 +134,6 @@ INSERT INTO itens_venda (venda_id, produto_id, quantidade, preco_unitario, desco
 (20,  7, 4.000, 28.90, 0.00, 115.60, 16.00, 'PESAGEM_DIRETA'),
 (20, 12, 2.500, 26.90, 0.00,  67.25, 15.00, 'PESAGEM_DIRETA');
 
--- ─────────────────────────────────────────────────────────────────────
--- PAGAMENTOS DE VENDA
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO pagamentos_venda (venda_id, forma_pagamento, valor, data_pagamento) VALUES
 (1,  'DINHEIRO', 130.00, NOW()-INTERVAL'29 days 10 hours'),
 (2,  'DEBITO',   224.90, NOW()-INTERVAL'29 days 11 hours'),
@@ -181,9 +156,6 @@ INSERT INTO pagamentos_venda (venda_id, forma_pagamento, valor, data_pagamento) 
 (19, 'CREDITO',  167.90, NOW()-INTERVAL'2 days 10 hours'),
 (20, 'PIX',      300.00, NOW()-INTERVAL'1 day 11 hours');
 
--- ─────────────────────────────────────────────────────────────────────
--- PERDAS DE ESTOQUE
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO perdas_estoque (id, produto_id, quantidade, custo_unitario, custo_total, motivo, observacao, usuario_id, created_at) VALUES
 (1,  1,  0.350, 35.00, 12.25, 'VENCIMENTO', 'Picanha passou do prazo',           1, NOW()-INTERVAL'25 days'),
 (2,  3,  1.200, 26.00, 31.20, 'AVARIA',     'Queda de temperatura no freezer',   1, NOW()-INTERVAL'22 days'),
@@ -197,9 +169,6 @@ INSERT INTO perdas_estoque (id, produto_id, quantidade, custo_unitario, custo_to
 (10, 19, 1.200,  8.00,  9.60, 'VENCIMENTO', 'Coxa e sobrecoxa vencida',          1, NOW()-INTERVAL'2 days');
 SELECT setval('perdas_estoque_id_seq', 10);
 
--- ─────────────────────────────────────────────────────────────────────
--- INVENTARIO FISICO
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO inventario_fisico (id, status, observacao, usuario_id, data_inicio, data_fim) VALUES
 (1, 'FINALIZADO', 'Inventario mensal — primeira quinzena',   1, NOW()-INTERVAL'20 days', NOW()-INTERVAL'19 days 20 hours'),
 (2, 'ABERTO',     'Inventario parcial bovinos desta semana', 1, NOW()-INTERVAL'1 day',   NULL);
@@ -232,9 +201,6 @@ INSERT INTO inventario_fisico_item (inventario_id, produto_id, saldo_sistema, sa
 (2, 11,  31.700,  NULL,   NULL),
 (2, 12,  55.000,  NULL,   NULL);
 
--- ─────────────────────────────────────────────────────────────────────
--- CONTAS A PAGAR
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO contas_pagar (id, descricao, fornecedor, valor, valor_pago, data_vencimento, data_pagamento, categoria, status) VALUES
 (1,  'Compra de bovinos — Fazenda Sao Joao',   'Fazenda Sao Joao',  4500.00, 4500.00, CURRENT_DATE-28, CURRENT_DATE-26, 'Materia-prima',  'PAGO'),
 (2,  'Aluguel do ponto comercial',             'Imobiliaria BRC',   2800.00, 2800.00, CURRENT_DATE-30, CURRENT_DATE-29, 'Infraestrutura', 'PAGO'),
@@ -248,9 +214,6 @@ INSERT INTO contas_pagar (id, descricao, fornecedor, valor, valor_pago, data_ven
 (10, 'Compra embutidos — Distribuidora WS',    'Distribuidora WS',  1100.00,    0.00, CURRENT_DATE-10, NULL,            'Materia-prima',  'ABERTO');
 SELECT setval('contas_pagar_id_seq', 10);
 
--- ─────────────────────────────────────────────────────────────────────
--- FATURAMENTO DE CLIENTES
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO faturamento_cliente (id, cliente_id, periodo_inicio, periodo_fim,
                                  total_vendas, total_pago, saldo_devedor, status, data_vencimento) VALUES
 (1, 4, CURRENT_DATE-30, CURRENT_DATE-16, 1500.00, 0.00, 1500.00, 'VENCIDO', CURRENT_DATE-16),
@@ -258,9 +221,6 @@ INSERT INTO faturamento_cliente (id, cliente_id, periodo_inicio, periodo_fim,
 (3, 5, CURRENT_DATE-7,  CURRENT_DATE,    3000.00, 0.00, 3000.00, 'ABERTO',  CURRENT_DATE+7);
 SELECT setval('faturamento_cliente_id_seq', 3);
 
--- ─────────────────────────────────────────────────────────────────────
--- CONTAS A RECEBER
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO contas_a_receber (id, cliente_id, faturamento_id, venda_id, descricao,
                                valor, valor_pago, data_vencimento, status) VALUES
 (1, 4, 1, 4,  'Fatura 01 — Restaurante Sabor', 1500.00, 0.00, CURRENT_DATE-16, 'ABERTO'),
@@ -270,9 +230,6 @@ INSERT INTO contas_a_receber (id, cliente_id, faturamento_id, venda_id, descrica
 (5, 6, NULL, NULL, 'Fiado Carlos Pereira',          75.00, 0.00, CURRENT_DATE+10, 'ABERTO');
 SELECT setval('contas_a_receber_id_seq', 5);
 
--- ─────────────────────────────────────────────────────────────────────
--- FICHA DE DESOSSA
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO ficha_desossa (id, produto_pai_id, nome, descricao, perda_total_percentual) VALUES
 (1, 13, 'Desossa Boi Traseiro', 'Processo completo de desossa do traseiro bovino', 8.00);
 SELECT setval('ficha_desossa_id_seq', 1);
@@ -287,9 +244,6 @@ INSERT INTO ficha_desossa_itens (id, ficha_desossa_id, produto_filho_id, percent
 (7, 1, 24,  7.00, 7);
 SELECT setval('ficha_desossa_itens_id_seq', 7);
 
--- ─────────────────────────────────────────────────────────────────────
--- PROCESSO DE DESOSSA
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO processo_desossa (id, ficha_desossa_id, quantidade_entrada, data_processo, usuario_id, observacao, status) VALUES
 (1, 1, 100.000, NOW()-INTERVAL'10 days', 1, 'Desossa de 100kg de traseiro bovino', 'CONCLUIDO');
 SELECT setval('processo_desossa_id_seq', 1);
@@ -304,9 +258,6 @@ INSERT INTO processo_desossa_resultado (id, processo_desossa_id, produto_filho_i
 (7, 1, 24,  7.000,  7.100,  1420.00);
 SELECT setval('processo_desossa_resultado_id_seq', 7);
 
--- ─────────────────────────────────────────────────────────────────────
--- CARGA BALANCA
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO carga_balanca (id, produto_id, tipo_balanca, codigo_plu, preco_enviado, validade_dias, status) VALUES
 (1,  1, 'TOLEDO_MGV6',  1,  69.90, 7, 'ENVIADO'),
 (2,  2, 'TOLEDO_MGV6',  2,  52.90, 7, 'ENVIADO'),
@@ -320,9 +271,6 @@ INSERT INTO carga_balanca (id, produto_id, tipo_balanca, codigo_plu, preco_envia
 (10, 4, 'TOLEDO_MGV7',  4,  44.90, 7, 'PENDENTE');
 SELECT setval('carga_balanca_id_seq', 10);
 
--- ─────────────────────────────────────────────────────────────────────
--- MOVIMENTACAO DE ESTOQUE
--- ─────────────────────────────────────────────────────────────────────
 INSERT INTO movimentacao_estoque (produto_id, tipo_movimentacao, quantidade, custo_unitario, documento_ref, observacao, usuario_id) VALUES
 (13, 'ENTRADA_COMPRA',   200.000, 10.00, 'NF-001',      'Compra Fazenda Sao Joao',    1),
 (18, 'ENTRADA_COMPRA',   100.000,  7.00, 'NF-002',      'Compra Aviario Bela Vista',  1),

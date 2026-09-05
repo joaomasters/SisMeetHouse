@@ -23,9 +23,9 @@ public class MovimentacaoEstoque {
 
     @Column(name = "tipo_movimentacao", nullable = false, length = 30)
     private String tipoMovimentacao;
-    // ENTRADA_COMPRA, ENTRADA_DESOSSA, SAIDA_VENDA,
-    // SAIDA_DESOSSA, SAIDA_DESCARTE, SAIDA_QUEBRA,
-    // SAIDA_MOAGEM, AJUSTE_POSITIVO, AJUSTE_NEGATIVO
+    
+    
+    
 
     @Column(nullable = false, precision = 12, scale = 4)
     private BigDecimal quantidade;

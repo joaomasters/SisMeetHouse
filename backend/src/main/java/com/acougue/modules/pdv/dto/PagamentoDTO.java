@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 public class PagamentoDTO {
 
     @NotBlank
-    private String formaPagamento; // DINHEIRO, CREDITO, DEBITO, PIX, FIADO, CONVENIO
+    private String formaPagamento; 
 
     @NotNull
     @DecimalMin("0.01")

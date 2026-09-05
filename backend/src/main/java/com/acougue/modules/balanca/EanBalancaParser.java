@@ -7,19 +7,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-/**
- * Decodifica EAN-13 ponderado (prefixo "2") emitido por balanças.
- *
- * Formato A — Valor Total:  2 [PPPPP] [VVVVV] [D]
- *   P = 5 dígitos do PLU do produto
- *   V = 5 dígitos do valor em centavos  (ex: 01250 = R$12,50)
- *
- * Formato B — Peso em Gramas: 2 [PPPPP] [GGGGG] [D]
- *   G = 5 dígitos do peso em gramas     (ex: 01500 = 1.500g = 1,5 kg)
- *
- * PRIORIDADE: sempre Formato A quando o produto tem preço/kg cadastrado,
- * pois evita divergência de centavos por arredondamento no caixa.
- */
 @Component
 public class EanBalancaParser {
 
@@ -48,7 +35,7 @@ public class EanBalancaParser {
         };
     }
 
-    // --- Formato A: lê valor, calcula peso ---
+    
     private EanParseResult parseByValor(int codigoBalanca, int campoNumerico, BigDecimal precoKg) {
         if (precoKg == null || precoKg.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidBarcodeException(
@@ -67,7 +54,7 @@ public class EanBalancaParser {
                 .build();
     }
 
-    // --- Formato B: lê peso, calcula valor ---
+    
     private EanParseResult parseByPeso(int codigoBalanca, int campoNumerico, BigDecimal precoKg) {
         BigDecimal pesoKg = BigDecimal.valueOf(campoNumerico).divide(
             BigDecimal.valueOf(1000), 3, RoundingMode.HALF_UP);
@@ -98,7 +85,7 @@ public class EanBalancaParser {
         }
     }
 
-    /** Algoritmo padrão GS1 para cálculo do dígito verificador EAN-13 */
+    
     private void validarDigitoVerificador(String ean13) {
         int soma = 0;
         for (int i = 0; i < 12; i++) {

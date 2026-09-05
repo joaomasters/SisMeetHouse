@@ -39,11 +39,11 @@ public class Produto {
 
     @Column(name = "unidade_medida", nullable = false, length = 5)
     @NotBlank
-    private String unidadeMedida; // KG, UN, CX, G
+    private String unidadeMedida; 
 
     @Column(name = "tipo_produto", nullable = false, length = 20)
     @NotBlank
-    private String tipoProduto; // CORTE, INDUSTRIALIZADO, INSUMO, SUBPRODUTO, BEBIDA
+    private String tipoProduto; 
 
     @Column(name = "preco_custo", precision = 12, scale = 4)
     private BigDecimal precoCusto;

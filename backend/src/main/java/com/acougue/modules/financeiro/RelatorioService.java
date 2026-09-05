@@ -29,12 +29,10 @@ public class RelatorioService {
     private final PagamentoVendaRepository pagRepo;
     private final ProdutoRepository        produtoRepo;
 
-    // ── 1. Relatório de Vendas (melhorado) ────────────────────────────────────
+    
 
-    /**
-     * Relatório consolidado de vendas com CMV, margem bruta, breakdown de
-     * formas de pagamento e evolução diária.
-     */
+    
+
     public RelatorioVendasDTO relatorioVendas(LocalDateTime inicio, LocalDateTime fim) {
         List<Venda> vendas = vendaRepo.findByPeriodo(inicio, fim).stream()
                 .filter(v -> "FECHADA".equals(v.getStatus()))
@@ -47,7 +45,7 @@ public class RelatorioService {
         BigDecimal ticketMedio = vendas.isEmpty() ? BigDecimal.ZERO
                 : totalVendas.divide(BigDecimal.valueOf(vendas.size()), 2, RoundingMode.HALF_UP);
 
-        // CMV via query agregada (sem N+1)
+        
         BigDecimal totalCMV = itensRepo.somarCMVPeriodo(inicio, fim);
         BigDecimal margemBruta = totalVendas.subtract(totalCMV).setScale(2, RoundingMode.HALF_UP);
         BigDecimal percentualMargem = totalVendas.compareTo(BigDecimal.ZERO) > 0
@@ -55,18 +53,18 @@ public class RelatorioService {
                              .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
-        // Top 10 produtos por receita
+        
         List<ProdutoVendaDTO> topProdutos = construirTopProdutos(vendas);
 
-        // Perdas do período
+        
         BigDecimal totalPerdas = perdasRepo.findByPeriodo(inicio, fim).stream()
                 .map(p -> p.getCustoTotal() != null ? p.getCustoTotal() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Formas de pagamento
+        
         List<FormaPagamentoDTO> porForma = construirBreakdownFormas(inicio, fim);
 
-        // Evolução diária
+        
         List<VendaDiariaDTO> porDia = construirEvolucaoDiaria(vendas);
 
         return RelatorioVendasDTO.builder()
@@ -83,12 +81,10 @@ public class RelatorioService {
                 .build();
     }
 
-    // ── 2. Relatório de Perdas ────────────────────────────────────────────────
+    
 
-    /**
-     * Breakdown de perdas de estoque por motivo (VENCIMENTO, AVARIA, FURTO, …).
-     * Inclui percentual de impacto sobre a receita do período.
-     */
+    
+
     public RelatorioPerdasDTO relatorioPerdas(LocalDateTime inicio, LocalDateTime fim) {
         List<PerdasEstoque> perdas = perdasRepo.findByPeriodo(inicio, fim);
 
@@ -102,7 +98,7 @@ public class RelatorioService {
                             .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
-        // Agrupa por motivo
+        
         Map<String, List<PerdasEstoque>> porMotivo = perdas.stream()
                 .collect(Collectors.groupingBy(PerdasEstoque::getMotivo));
 
@@ -133,12 +129,10 @@ public class RelatorioService {
                 .build();
     }
 
-    // ── 3. Relatório de Estoque Atual ─────────────────────────────────────────
+    
 
-    /**
-     * Snapshot do estoque: valor total em câmara, produtos abaixo do mínimo
-     * e lista de alertas ordenada pelo maior deficit.
-     */
+    
+
     public RelatorioEstoqueDTO relatorioEstoque() {
         List<Produto> todos = produtoRepo.findAllByAtivoTrue();
         List<Produto> abaixoMinimo = produtoRepo.findEstoqueAbaixoMinimo();
@@ -171,13 +165,10 @@ public class RelatorioService {
                 .build();
     }
 
-    // ── 4. Relatório de Contas a Pagar (aging) ────────────────────────────────
+    
 
-    /**
-     * Aging de contas a pagar: vencidas, a vencer em 7 e 30 dias, total aberto
-     * e breakdown por categoria de despesa. Recebe 'hoje' como parâmetro para
-     * facilitar testes unitários.
-     */
+    
+
     public RelatorioContasPagarDTO relatorioContasPagar(LocalDate hoje) {
         LocalDate em7  = hoje.plusDays(7);
         LocalDate em30 = hoje.plusDays(30);
@@ -205,7 +196,7 @@ public class RelatorioService {
                 .map(this::saldoDevedor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Breakdown por categoria
+        
         Map<String, List<ContasPagar>> porCat = abertas.stream()
                 .collect(Collectors.groupingBy(
                         c -> c.getCategoria() != null ? c.getCategoria() : "Sem categoria"));
@@ -237,7 +228,7 @@ public class RelatorioService {
                 .build();
     }
 
-    // ── 5. Fluxo de Caixa (melhorado com saldo projetado) ─────────────────────
+    
 
     public FluxoCaixaDTO fluxoCaixa(LocalDate inicio, LocalDate fim) {
         LocalDateTime dtInicio = inicio.atStartOfDay();
@@ -261,7 +252,7 @@ public class RelatorioService {
                 .build();
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
+    
 
     private BigDecimal saldoDevedor(ContasPagar c) {
         BigDecimal pago = c.getValorPago() != null ? c.getValorPago() : BigDecimal.ZERO;

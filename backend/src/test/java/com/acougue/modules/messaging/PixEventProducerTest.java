@@ -31,7 +31,7 @@ class PixEventProducerTest {
 
         verify(kafkaTemplate).send(
                 eq(KafkaTopicConfig.PIX_CONFIRMADOS),
-                eq("999"),  // chave = mpPaymentId
+                eq("999"),  
                 eq(event)
         );
     }

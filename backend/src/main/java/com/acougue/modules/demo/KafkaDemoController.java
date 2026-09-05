@@ -17,24 +17,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * ⚠️  DEMO ONLY — ativo apenas quando kafka.enabled=true.
- *
- * Endpoints para demonstrar o pipeline Kafka em tempo real sem precisar
- * de transações reais (PIX, vendas no PDV). Ideal para apresentações e vídeos.
- *
- * Tópicos publicados:
- *   acougue.vendas.fechadas   → EstoqueConsumer verifica alertas
- *   acougue.pix.confirmados   → PixConsumer loga a confirmação
- *   acougue.estoque.alertas   → AlertaEstoqueConsumer loga o alerta
- *
- * Fluxo completo:
- *   POST /api/demo/kafka/venda-completa
- *     → publica VendaFechadaEvent
- *     → EstoqueConsumer detecta Picanha abaixo do mínimo
- *     → publica AlertaEstoqueEvent automaticamente
- *     → AlertaEstoqueConsumer loga o alerta
- */
 @Slf4j
 @RestController
 @RequestMapping("/demo/kafka")
@@ -44,40 +26,35 @@ public class KafkaDemoController {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    // ── 1. Simula venda completa com alerta de estoque ─────────────────────────
+    
 
-    /**
-     * Publica um VendaFechadaEvent realista com 3 produtos.
-     * Picanha e Contrafilé estão abaixo do mínimo → EstoqueConsumer
-     * detecta automaticamente e dispara AlertaEstoqueEvent para cada um.
-     *
-     * Verifique os logs do Railway para ver o pipeline completo.
-     */
+    
+
     @PostMapping("/venda-completa")
     public ResponseEntity<Map<String, Object>> simularVendaCompleta() {
 
         long vendaId = System.currentTimeMillis() % 100_000;
 
         List<VendaFechadaEvent.ItemEvent> itens = List.of(
-                // Picanha: 1.5 kg restante, mínimo 5 kg → ALERTA
+                
                 new VendaFechadaEvent.ItemEvent(
                         1L, "Picanha",
-                        new BigDecimal("2.500"),          // quantidade vendida
-                        new BigDecimal("1.500"),          // estoqueAposVenda  ← abaixo do mínimo
-                        new BigDecimal("5.000")           // estoqueMinimo
+                        new BigDecimal("2.500"),          
+                        new BigDecimal("1.500"),          
+                        new BigDecimal("5.000")           
                 ),
-                // Contrafilé: 3 kg restante, mínimo 4 kg → ALERTA
+                
                 new VendaFechadaEvent.ItemEvent(
                         2L, "Contrafilé",
                         new BigDecimal("1.000"),
-                        new BigDecimal("3.000"),          // abaixo do mínimo
+                        new BigDecimal("3.000"),          
                         new BigDecimal("4.000")
                 ),
-                // Alcatra: 8 kg restante, mínimo 3 kg → OK, sem alerta
+                
                 new VendaFechadaEvent.ItemEvent(
                         3L, "Alcatra",
                         new BigDecimal("0.500"),
-                        new BigDecimal("8.000"),          // acima do mínimo
+                        new BigDecimal("8.000"),          
                         new BigDecimal("3.000")
                 )
         );
@@ -104,12 +81,10 @@ public class KafkaDemoController {
         return ResponseEntity.ok(response);
     }
 
-    // ── 2. Simula confirmação de PIX ──────────────────────────────────────────
+    
 
-    /**
-     * Publica um PixConfirmadoEvent simulando um retorno do Mercado Pago.
-     * PixConsumer consome e loga. Pode ser extendido para WebSocket.
-     */
+    
+
     @PostMapping("/pix-confirmado")
     public ResponseEntity<Map<String, Object>> simularPixConfirmado(
             @RequestParam(defaultValue = "42") Long vendaId,
@@ -133,12 +108,10 @@ public class KafkaDemoController {
         ));
     }
 
-    // ── 3. Simula alerta de estoque direto ────────────────────────────────────
+    
 
-    /**
-     * Publica AlertaEstoqueEvent diretamente no tópico de alertas.
-     * Útil para demonstrar o consumer de alertas isoladamente.
-     */
+    
+
     @PostMapping("/alerta-estoque")
     public ResponseEntity<Map<String, Object>> simularAlertaEstoque(
             @RequestParam(defaultValue = "Picanha") String produto,
@@ -167,12 +140,10 @@ public class KafkaDemoController {
         ));
     }
 
-    // ── 4. Informações dos tópicos ────────────────────────────────────────────
+    
 
-    /**
-     * Retorna informações sobre os tópicos configurados.
-     * Útil para mostrar a arquitetura de forma visual no vídeo.
-     */
+    
+
     @GetMapping("/topicos")
     public ResponseEntity<Map<String, Object>> listarTopicos() {
         return ResponseEntity.ok(Map.of(

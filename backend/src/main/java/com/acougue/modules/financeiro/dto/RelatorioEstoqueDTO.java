@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class RelatorioEstoqueDTO {
 
-    /** Σ (estoqueAtual × precoCusto) de todos os produtos ativos. */
+    
     private BigDecimal valorTotalEstoque;
     private int quantidadeProdutos;
     private int produtosAbaixoMinimo;
@@ -30,7 +30,7 @@ public class RelatorioEstoqueDTO {
         private String unidadeMedida;
         private BigDecimal estoqueAtual;
         private BigDecimal estoqueMinimo;
-        /** Negativo = quanto falta para atingir o mínimo. */
+        
         private BigDecimal diferenca;
     }
 }

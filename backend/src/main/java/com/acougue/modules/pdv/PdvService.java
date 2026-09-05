@@ -23,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PdvService {
 
-    /** Publicador de Spring ApplicationEvents — VendaEventProducer escuta com @TransactionalEventListener. */
+    
     private final ApplicationEventPublisher eventPublisher;
 
     private final VendaRepository          vendaRepo;
@@ -36,7 +36,7 @@ public class PdvService {
     private final EstoqueService           estoqueService;
     private final EanBalancaParser         eanParser;
 
-    // ── Caixa ──────────────────────────────────────────────────
+    
 
     @Transactional
     public Caixa abrirCaixa(Long operadorId, BigDecimal valorAbertura) {
@@ -61,7 +61,7 @@ public class PdvService {
         return caixaRepo.save(caixa);
     }
 
-    // ── Venda ──────────────────────────────────────────────────
+    
 
     @Transactional
     public Venda abrirVenda(AbrirVendaDTO dto) {
@@ -88,9 +88,8 @@ public class PdvService {
         return vendaRepo.save(venda);
     }
 
-    /**
-     * Decodifica o barcode e retorna ItemVendaDTO pronto para adicionar ao cupom.
-     */
+    
+
     public ItemVendaDTO processarBarcode(String ean13) {
         if (ean13.startsWith("2") && ean13.length() == 13) {
             return processarEanBalanca(ean13);
@@ -162,14 +161,14 @@ public class PdvService {
             }
         }
 
-        // Baixar estoque de cada item vendido (síncrono — garante consistência)
+        
         List<ItensVenda> itens = itensRepo.findByVendaId(venda.getId());
         List<VendaFechadaEvent.ItemEvent> itemEvents = new ArrayList<>();
         for (ItensVenda item : itens) {
             Produto p = item.getProduto();
             estoqueService.saida(p, item.getQuantidade(),
                     "SAIDA_VENDA", "VENDA#" + venda.getId(), venda.getOperadorId());
-            // Captura estoque pós-baixa para o evento (usado pelo EstoqueConsumer para alertas)
+            
             itemEvents.add(new VendaFechadaEvent.ItemEvent(
                     p.getId(), p.getNome(), item.getQuantidade(),
                     p.getEstoqueAtual(),
@@ -183,7 +182,7 @@ public class PdvService {
 
         Venda salva = vendaRepo.save(venda);
 
-        // Publica Spring ApplicationEvent — VendaEventProducer envia ao Kafka APÓS commit
+        
         eventPublisher.publishEvent(new VendaFechadaEvent(
                 salva.getId(), salva.getOperadorId(), salva.getTotal(), itemEvents));
 
@@ -197,7 +196,7 @@ public class PdvService {
         return vendaRepo.save(venda);
     }
 
-    // ── Privados ───────────────────────────────────────────────
+    
 
     private ItemVendaDTO processarEanBalanca(String ean13) {
         int codigoBalanca = Integer.parseInt(ean13.substring(1, 6));

@@ -14,13 +14,13 @@ import java.util.List;
 @AllArgsConstructor
 public class RelatorioContasPagarDTO {
 
-    /** Saldo devedor total (valor - valorPago) de contas com status ABERTO. */
+    
     private BigDecimal totalAberto;
-    /** Parcela já vencida (dataVencimento < hoje). */
+    
     private BigDecimal totalVencido;
-    /** Vence nos próximos 7 dias (inclusive hoje). */
+    
     private BigDecimal aVencer7Dias;
-    /** Vence nos próximos 30 dias (inclusive hoje). */
+    
     private BigDecimal aVencer30Dias;
     private List<ContaCategoriaDTO> porCategoria;
 

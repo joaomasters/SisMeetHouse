@@ -20,13 +20,8 @@ public class DreService {
     private final VendaRepository      vendaRepo;
     private final ItensVendaRepository itensRepo;
 
-    /**
-     * Calcula o DRE simplificado para um mês/ano.
-     * Receita Bruta = Σ total das vendas fechadas
-     * CMV           = Σ (custo_item × quantidade) dos itens vendidos
-     * Lucro Bruto   = Receita - CMV
-     * Lucro Líquido = Lucro Bruto - Custos Operacionais (informados manualmente por ora)
-     */
+    
+
     public DreDTO calcular(int ano, int mes, BigDecimal custosOperacionais) {
         YearMonth ym = YearMonth.of(ano, mes);
         LocalDateTime inicio = ym.atDay(1).atStartOfDay();
@@ -49,7 +44,7 @@ public class DreService {
                               .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
-        // Margem por produto
+        
         List<Object[]> rawMargens = itensRepo.relatorioMargemPorProduto(inicio, fim);
         List<DreDTO.MargemPorProdutoDTO> margens = new ArrayList<>();
         for (Object[] row : rawMargens) {

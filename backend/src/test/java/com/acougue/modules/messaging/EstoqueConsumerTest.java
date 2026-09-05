@@ -25,17 +25,17 @@ class EstoqueConsumerTest {
     @Mock AlertaEventProducer alertaProducer;
     @InjectMocks EstoqueConsumer consumer;
 
-    // ── verificarAlerta ───────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("verificarAlerta: publica AlertaEstoqueEvent quando estoque < mínimo")
     void verificarAlerta_publicaAlerta_quandoAbaixoDoMinimo() {
-        // Estoque após venda = 2 kg, mínimo = 5 kg → abaixo do mínimo
+        
         VendaFechadaEvent.ItemEvent item = new VendaFechadaEvent.ItemEvent(
                 1L, "Picanha",
                 new BigDecimal("3.000"),
-                new BigDecimal("2.000"),  // estoqueAposVenda
-                new BigDecimal("5.000")   // estoqueMinimo
+                new BigDecimal("2.000"),  
+                new BigDecimal("5.000")   
         );
 
         consumer.verificarAlerta(item);
@@ -48,18 +48,18 @@ class EstoqueConsumerTest {
         assertThat(alerta.nomeProduto()).isEqualTo("Picanha");
         assertThat(alerta.estoqueAtual()).isEqualByComparingTo("2.000");
         assertThat(alerta.estoqueMinimo()).isEqualByComparingTo("5.000");
-        assertThat(alerta.deficit()).isEqualByComparingTo("-3.000"); // 2 - 5 = -3
+        assertThat(alerta.deficit()).isEqualByComparingTo("-3.000"); 
     }
 
     @Test
     @DisplayName("verificarAlerta: NÃO publica alerta quando estoque >= mínimo")
     void verificarAlerta_naoPublica_quandoEstoqueOk() {
-        // Estoque após venda = 10 kg, mínimo = 5 kg → OK
+        
         VendaFechadaEvent.ItemEvent item = new VendaFechadaEvent.ItemEvent(
                 2L, "Contrafilé",
                 new BigDecimal("2.000"),
-                new BigDecimal("10.000"), // estoqueAposVenda
-                new BigDecimal("5.000")   // estoqueMinimo
+                new BigDecimal("10.000"), 
+                new BigDecimal("5.000")   
         );
 
         consumer.verificarAlerta(item);
@@ -73,8 +73,8 @@ class EstoqueConsumerTest {
         VendaFechadaEvent.ItemEvent item = new VendaFechadaEvent.ItemEvent(
                 3L, "Sal Grosso",
                 new BigDecimal("1.000"),
-                new BigDecimal("0.500"),  // estoqueAposVenda baixíssimo
-                BigDecimal.ZERO           // estoqueMinimo = 0 → sem controle
+                new BigDecimal("0.500"),  
+                BigDecimal.ZERO           
         );
 
         consumer.verificarAlerta(item);
@@ -89,7 +89,7 @@ class EstoqueConsumerTest {
                 4L, "Frango",
                 new BigDecimal("2.000"),
                 new BigDecimal("1.000"),
-                null  // estoqueMinimo nulo
+                null  
         );
 
         consumer.verificarAlerta(item);
@@ -100,25 +100,25 @@ class EstoqueConsumerTest {
     @Test
     @DisplayName("verificarAlerta: publica com déficit correto quando exatamente no limite")
     void verificarAlerta_publicaAlerta_quandoExatamenteNoLimite() {
-        // Estoque = mínimo → compareTo retorna 0 → NÃO é abaixo do mínimo
+        
         VendaFechadaEvent.ItemEvent item = new VendaFechadaEvent.ItemEvent(
                 5L, "Boi",
                 new BigDecimal("5.000"),
-                new BigDecimal("5.000"),  // igual ao mínimo
+                new BigDecimal("5.000"),  
                 new BigDecimal("5.000")
         );
 
         consumer.verificarAlerta(item);
 
-        verifyNoInteractions(alertaProducer); // exatamente no limite = OK
+        verifyNoInteractions(alertaProducer); 
     }
 
-    // ── consumir (fluxo completo) ─────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("consumir: processa todos os itens do evento")
     void consumir_processaTodosItens() {
-        // 2 itens: picanha abaixo, contrafilé ok
+        
         VendaFechadaEvent event = new VendaFechadaEvent(1L, 10L, new BigDecimal("500.00"), List.of(
                 new VendaFechadaEvent.ItemEvent(1L, "Picanha",   new BigDecimal("3.000"), new BigDecimal("2.000"), new BigDecimal("5.000")),
                 new VendaFechadaEvent.ItemEvent(2L, "Contrafilé", new BigDecimal("1.000"), new BigDecimal("10.000"), new BigDecimal("5.000"))
@@ -126,7 +126,7 @@ class EstoqueConsumerTest {
 
         consumer.consumir(event);
 
-        // Apenas Picanha dispara alerta
+        
         verify(alertaProducer, times(1)).publicarAlerta(any());
     }
 

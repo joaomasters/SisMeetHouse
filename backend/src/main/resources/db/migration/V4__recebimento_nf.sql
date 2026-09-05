@@ -1,4 +1,3 @@
--- Módulo de Recebimento de Mercadoria (entrada NF)
 CREATE TABLE recebimento_mercadoria (
     id               SERIAL PRIMARY KEY,
     numero_nf        VARCHAR(50),
@@ -24,11 +23,9 @@ CREATE TABLE recebimento_item (
     created_at     TIMESTAMP     DEFAULT NOW()
 );
 
--- Casamento NF x Desossa
 ALTER TABLE processo_desossa
     ADD COLUMN IF NOT EXISTS recebimento_id INT REFERENCES recebimento_mercadoria(id);
 
--- Módulo de Nota Fiscal de Saída (emissão)
 CREATE TABLE nota_fiscal_saida (
     id                SERIAL PRIMARY KEY,
     numero_nf         VARCHAR(50),

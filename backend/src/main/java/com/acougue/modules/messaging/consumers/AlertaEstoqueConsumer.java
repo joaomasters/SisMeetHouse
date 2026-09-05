@@ -7,15 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-/**
- * Consome AlertaEstoqueEvent e toma ação (log + extensível para email/push).
- *
- * Extensões futuras deste consumer:
- *  - Enviar e-mail para o gerente
- *  - Push notification no app
- *  - Atualizar badge no dashboard em tempo real via WebSocket
- *  - Criar ordem de compra automática
- */
 @Slf4j
 @Component
 @ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
@@ -32,6 +23,6 @@ public class AlertaEstoqueConsumer {
                 event.nomeProduto(), event.produtoId(),
                 event.estoqueAtual(), event.estoqueMinimo(), event.deficit());
 
-        // TODO: integrar com serviço de notificação (email, push, WebSocket)
+        
     }
 }

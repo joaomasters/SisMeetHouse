@@ -34,7 +34,7 @@ class RelatorioServiceTest {
     private static final LocalDateTime INI = LocalDate.of(2026, 9, 1).atStartOfDay();
     private static final LocalDateTime FIM = LocalDate.of(2026, 9, 30).atTime(LocalTime.MAX);
 
-    // ── fixtures ──────────────────────────────────────────────────────────────
+    
 
     private Produto picanha;
     private Produto contrafile;
@@ -52,7 +52,7 @@ class RelatorioServiceTest {
                 .unidadeMedida("KG").build();
     }
 
-    // ── relatorioVendas ───────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("relatorioVendas: retorna zeros quando não há vendas")
@@ -154,7 +154,7 @@ class RelatorioServiceTest {
     @DisplayName("relatorioVendas: cria breakdown de formas de pagamento com percentual")
     void relatorioVendas_breakdownFormasPagamento() {
         Venda v1 = vendaFechada(1L, "2026-09-10", new BigDecimal("300.00"));
-        // PIX=200, DINHEIRO=100 → PIX=66.67%, DINHEIRO=33.33%
+        
         Object[] pix      = new Object[]{"PIX",     new BigDecimal("200.00")};
         Object[] dinheiro = new Object[]{"DINHEIRO", new BigDecimal("100.00")};
 
@@ -172,7 +172,7 @@ class RelatorioServiceTest {
         assertThat(maior.getPercentual()).isEqualByComparingTo("66.67");
     }
 
-    // ── relatorioPerdas ───────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("relatorioPerdas: retorna zeros sem perdas")
@@ -201,7 +201,7 @@ class RelatorioServiceTest {
 
         assertThat(dto.getTotalCusto()).isEqualByComparingTo("280.00");
         assertThat(dto.getQuantidadeRegistros()).isEqualTo(3);
-        // VENCIMENTO = R$200 = 71.43%
+        
         RelatorioPerdasDTO.PerdaMotivoDTO motivo1 = dto.getPorMotivo().get(0);
         assertThat(motivo1.getMotivo()).isEqualTo("VENCIMENTO");
         assertThat(motivo1.getQuantidade()).isEqualTo(2);
@@ -218,7 +218,7 @@ class RelatorioServiceTest {
 
         RelatorioPerdasDTO dto = service.relatorioPerdas(INI, FIM);
 
-        // 100 / 1000 = 10%
+        
         assertThat(dto.getPercentualImpactoVendas()).isEqualByComparingTo("10.00");
     }
 
@@ -233,12 +233,12 @@ class RelatorioServiceTest {
         assertThat(dto.getPercentualImpactoVendas()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
-    // ── relatorioEstoque ──────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("relatorioEstoque: calcula valor total do estoque (qtd × custo)")
     void relatorioEstoque_calculaValorTotal() {
-        // picanha: 10 kg × R$45 = R$450 | contrafilé: 3 kg × R$30 = R$90 → total = R$540
+        
         when(produtoRepo.findAllByAtivoTrue()).thenReturn(List.of(picanha, contrafile));
         when(produtoRepo.findEstoqueAbaixoMinimo()).thenReturn(List.of(contrafile));
 
@@ -251,7 +251,7 @@ class RelatorioServiceTest {
     @Test
     @DisplayName("relatorioEstoque: lista alertas de estoque abaixo do mínimo")
     void relatorioEstoque_listaAlertasAbaixoMinimo() {
-        // contrafilé: atual=3, mínimo=8 → diferença=-5
+        
         when(produtoRepo.findAllByAtivoTrue()).thenReturn(List.of(picanha, contrafile));
         when(produtoRepo.findEstoqueAbaixoMinimo()).thenReturn(List.of(contrafile));
 
@@ -291,26 +291,26 @@ class RelatorioServiceTest {
         assertThat(dto.getValorTotalEstoque()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
-    // ── relatorioContasPagar ──────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("relatorioContasPagar: classifica corretamente vencidas vs a vencer")
     void relatorioContasPagar_classificaVencidaEAVencer() {
         LocalDate hoje = LocalDate.of(2026, 9, 3);
 
-        // Vencida: venceu em 01/09
+        
         ContasPagar vencida = ContasPagar.builder().id(1L)
                 .valor(new BigDecimal("300.00")).valorPago(BigDecimal.ZERO)
                 .status("ABERTO").dataVencimento(LocalDate.of(2026, 9, 1))
                 .categoria("Fornecedor").build();
 
-        // A vencer em 7 dias: vence em 08/09
+        
         ContasPagar aVencer7 = ContasPagar.builder().id(2L)
                 .valor(new BigDecimal("200.00")).valorPago(BigDecimal.ZERO)
                 .status("ABERTO").dataVencimento(LocalDate.of(2026, 9, 8))
                 .categoria("Aluguel").build();
 
-        // A vencer em 30 dias: vence em 25/09
+        
         ContasPagar aVencer30 = ContasPagar.builder().id(3L)
                 .valor(new BigDecimal("500.00")).valorPago(BigDecimal.ZERO)
                 .status("ABERTO").dataVencimento(LocalDate.of(2026, 9, 25))
@@ -324,7 +324,7 @@ class RelatorioServiceTest {
         assertThat(dto.getTotalAberto()).isEqualByComparingTo("1000.00");
         assertThat(dto.getTotalVencido()).isEqualByComparingTo("300.00");
         assertThat(dto.getAVencer7Dias()).isEqualByComparingTo("200.00");
-        // a vencer em 30 inclui tanto a de 8/9 quanto a de 25/9
+        
         assertThat(dto.getAVencer30Dias()).isEqualByComparingTo("700.00");
     }
 
@@ -332,7 +332,7 @@ class RelatorioServiceTest {
     @DisplayName("relatorioContasPagar: abate valorPago do saldo devedor")
     void relatorioContasPagar_descontaValorPago() {
         LocalDate hoje = LocalDate.of(2026, 9, 3);
-        // Valor=500, já pago=150 → saldo=350
+        
         ContasPagar parcial = ContasPagar.builder().id(1L)
                 .valor(new BigDecimal("500.00")).valorPago(new BigDecimal("150.00"))
                 .status("ABERTO").dataVencimento(LocalDate.of(2026, 9, 1))
@@ -365,7 +365,7 @@ class RelatorioServiceTest {
 
         RelatorioContasPagarDTO dto = service.relatorioContasPagar(hoje);
 
-        // total=1000 → Fornecedor=60%, Aluguel=40%
+        
         assertThat(dto.getPorCategoria()).hasSize(2);
         RelatorioContasPagarDTO.ContaCategoriaDTO cat1 = dto.getPorCategoria().get(0);
         assertThat(cat1.getCategoria()).isEqualTo("Fornecedor");
@@ -385,7 +385,7 @@ class RelatorioServiceTest {
         assertThat(dto.getPorCategoria()).isEmpty();
     }
 
-    // ── fluxoCaixa ────────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("fluxoCaixa: saldo = recebimentos - pagamentos realizados")
@@ -408,7 +408,7 @@ class RelatorioServiceTest {
         assertThat(dto.getSaldo()).isEqualByComparingTo("500.00");
     }
 
-    // ── helpers de fixture ────────────────────────────────────────────────────
+    
 
     private Venda vendaFechada(Long id, String data, BigDecimal total) {
         return vendaComStatus(id, data, total, "FECHADA");

@@ -6,18 +6,11 @@ import org.springframework.stereotype.Component;
 import java.text.Normalizer;
 import java.util.List;
 
-/**
- * Gera arquivos de carga de PLU para balanças Toledo MGV7 e Filizola Smart.
- * Todos os arquivos usam encoding ISO-8859-1 e terminação de linha CRLF.
- */
 @Component
 public class BalancaArquivoGerador {
 
-    /**
-     * Formato Toledo MGV6/MGV7:
-     * Cabeçalho: 99|CARGA|1|1
-     * Dados:     PLU(5)|NOME(22)|PRECO(7.2f)|VALIDADE(3)|TARA(5)
-     */
+    
+
     public String gerarToledoMGV7(List<Produto> produtos) {
         StringBuilder sb = new StringBuilder();
         sb.append("99|CARGA|1|1\r\n");
@@ -35,10 +28,8 @@ public class BalancaArquivoGerador {
         return sb.toString();
     }
 
-    /**
-     * Formato Filizola Smart (CSV posicional):
-     * 1;PLU(5);NOME(30);PRECO(vírgula);VALIDADE_DIAS
-     */
+    
+
     public String gerarFilizolaSmart(List<Produto> produtos) {
         StringBuilder sb = new StringBuilder();
 
@@ -53,7 +44,7 @@ public class BalancaArquivoGerador {
         return sb.toString();
     }
 
-    /** Remove acentos, converte para maiúsculo, trunca e preenche com espaços */
+    
     private String sanitizar(String nome, int tamanhoMax) {
         String sem = Normalizer.normalize(nome.toUpperCase(), Normalizer.Form.NFD)
                                .replaceAll("\\p{InCombiningDiacriticalMarks}", "")

@@ -20,7 +20,7 @@ public class CargaBalanca {
     private Produto produto;
 
     @Column(name = "tipo_balanca", nullable = false, length = 20)
-    private String tipoBalanca; // TOLEDO_MGV6, TOLEDO_MGV7, FILIZOLA_SMART
+    private String tipoBalanca; 
 
     @Column(name = "codigo_plu", nullable = false)
     private Integer codigoPlu;
@@ -37,5 +37,5 @@ public class CargaBalanca {
     private LocalDateTime dataEnvio;
 
     @Builder.Default
-    private String status = "PENDENTE"; // PENDENTE, ENVIADO, ERRO
+    private String status = "PENDENTE"; 
 }

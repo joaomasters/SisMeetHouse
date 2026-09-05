@@ -26,7 +26,7 @@ class DreServiceTest {
 
     @InjectMocks DreService service;
 
-    // ── calcular ──────────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("calcular: período formatado como MM/YYYY")
@@ -41,7 +41,7 @@ class DreServiceTest {
     @Test
     @DisplayName("calcular: lucro bruto = receita - CMV")
     void calcular_lucroBruto_receitaMenosCmv() {
-        // Receita=10000, CMV=6000 → lucro bruto=4000
+        
         stubReceita(2026, 9, new BigDecimal("10000.00"));
         stubCMV(2026, 9, new BigDecimal("6000.00"));
         stubMargens(List.of());
@@ -56,7 +56,7 @@ class DreServiceTest {
     @Test
     @DisplayName("calcular: lucro líquido = lucro bruto - custos operacionais")
     void calcular_lucroLiquido_descontaCustosOperacionais() {
-        // Receita=10000, CMV=6000, Opex=1500 → lucro líquido=2500
+        
         stubReceita(2026, 9, new BigDecimal("10000.00"));
         stubCMV(2026, 9, new BigDecimal("6000.00"));
         stubMargens(List.of());
@@ -70,7 +70,7 @@ class DreServiceTest {
     @Test
     @DisplayName("calcular: percentual lucro bruto sobre receita")
     void calcular_percentualLucroBruto() {
-        // 4000 / 10000 = 40%
+        
         stubReceita(2026, 9, new BigDecimal("10000.00"));
         stubCMV(2026, 9, new BigDecimal("6000.00"));
         stubMargens(List.of());
@@ -83,7 +83,7 @@ class DreServiceTest {
     @Test
     @DisplayName("calcular: percentual lucro líquido sobre receita")
     void calcular_percentualLucroLiquido() {
-        // Líquido=2500, Receita=10000 → 25%
+        
         stubReceita(2026, 9, new BigDecimal("10000.00"));
         stubCMV(2026, 9, new BigDecimal("6000.00"));
         stubMargens(List.of());
@@ -122,8 +122,8 @@ class DreServiceTest {
     @Test
     @DisplayName("calcular: margens por produto calculadas corretamente")
     void calcular_margensPorProduto() {
-        // produto_id=1, nome="Picanha", qtd=10, receita=899, cmv=450
-        // margem = 899-450 = 449, percentual = 449/899 = 49.94%
+        
+        
         Object[] row = new Object[]{
             1L, "Picanha",
             new BigDecimal("10.000"),
@@ -172,13 +172,13 @@ class DreServiceTest {
 
         service.calcular(2026, 1, BigDecimal.ZERO);
 
-        // janeiro: 1/1 00:00 até 31/1 23:59:59
+        
         LocalDateTime esperadoInicio = LocalDateTime.of(2026, 1, 1, 0, 0, 0);
         LocalDateTime esperadoFim    = LocalDateTime.of(2026, 1, 31, 23, 59, 59);
         verify(vendaRepo).somarTotalPeriodo(esperadoInicio, esperadoFim);
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
+    
 
     private void stubVazio(int ano, int mes) {
         stubReceita(ano, mes, BigDecimal.ZERO);

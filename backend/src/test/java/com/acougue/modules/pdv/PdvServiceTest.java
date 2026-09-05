@@ -57,7 +57,7 @@ class PdvServiceTest {
                 .estoqueAtual(new BigDecimal("20.000")).build();
     }
 
-    // ── abrirCaixa ────────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("abrirCaixa: cria caixa com status ABERTO")
@@ -86,7 +86,7 @@ class PdvServiceTest {
         verify(caixaRepo, never()).save(any());
     }
 
-    // ── fecharCaixa ───────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("fecharCaixa: muda status para FECHADO")
@@ -121,7 +121,7 @@ class PdvServiceTest {
                 .hasMessageContaining("99");
     }
 
-    // ── abrirVenda ────────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("abrirVenda: cria venda com status ABERTA vinculada ao caixa")
@@ -156,7 +156,7 @@ class PdvServiceTest {
                 .hasMessageContaining("Caixa está fechado");
     }
 
-    // ── fecharVenda ───────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("fecharVenda: calcula troco corretamente")
@@ -195,7 +195,7 @@ class PdvServiceTest {
 
         PagamentoDTO pag = new PagamentoDTO();
         pag.setFormaPagamento("DINHEIRO");
-        pag.setValor(new BigDecimal("80.00")); // menos que o total
+        pag.setValor(new BigDecimal("80.00")); 
         dto.setPagamentos(List.of(pag));
 
         when(vendaRepo.findById(1L)).thenReturn(Optional.of(venda));
@@ -210,7 +210,7 @@ class PdvServiceTest {
     void fecharVenda_fiado_semCliente_lancaExcecao() {
         Venda venda = Venda.builder()
                 .id(1L).status("ABERTA").caixa(caixaAberto)
-                .cliente(null) // sem cliente identificado
+                .cliente(null) 
                 .total(new BigDecimal("50.00")).desconto(BigDecimal.ZERO).build();
 
         FecharVendaDTO dto = new FecharVendaDTO();
@@ -222,8 +222,8 @@ class PdvServiceTest {
         dto.setPagamentos(List.of(pag));
 
         when(vendaRepo.findById(1L)).thenReturn(Optional.of(venda));
-        // pagRepo.save é chamado antes da exceção, mas não precisamos stubar pois
-        // o retorno não é usado pelo service — pagRepo retorna null por padrão (mock)
+        
+        
 
         assertThatThrownBy(() -> service.fecharVenda(dto))
                 .isInstanceOf(BusinessException.class)
@@ -260,7 +260,7 @@ class PdvServiceTest {
                 eq("SAIDA_VENDA"), eq("VENDA#1"), eq(10L));
     }
 
-    // ── cancelarVenda ─────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("cancelarVenda: muda status para CANCELADA")
@@ -289,7 +289,7 @@ class PdvServiceTest {
                 .hasMessageContaining("já encerrada");
     }
 
-    // ── processarBarcode ─────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("processarBarcode: EAN padrão retorna item com quantidade 1")

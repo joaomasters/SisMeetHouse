@@ -31,11 +31,11 @@ public class PixService {
     private final PagamentoPixRepository pixRepo;
     private final ObjectMapper objectMapper;
 
-    /** Opcional — só existe quando kafka.enabled=true. */
+    
     @Autowired(required = false)
     private PixEventProducer pixEventProducer;
 
-    // ── Cria cobrança PIX via Mercado Pago ──────────────────────────────────
+    
     public PixChargeResponse criarCobranca(BigDecimal valor, Long vendaId) {
         if (mpAccessToken == null || mpAccessToken.isBlank()) {
             throw new BusinessException(
@@ -90,7 +90,7 @@ public class PixService {
         }
     }
 
-    // ── Verifica status no MP ────────────────────────────────────────────────
+    
     public Map<String, String> verificarStatus(String mpPaymentId) {
         if (mpAccessToken == null || mpAccessToken.isBlank()) {
             return Map.of("status", "ERRO", "message", "PIX não configurado");
@@ -116,7 +116,7 @@ public class PixService {
                 default                          -> "ERRO";
             };
 
-            // Atualiza no banco e publica evento Kafka quando aprovado
+            
             if ("APROVADO".equals(normalizado)) {
                 try {
                     pixRepo.findByMpPaymentId(Long.parseLong(mpPaymentId)).ifPresent(p -> {
@@ -124,7 +124,7 @@ public class PixService {
                             p.setStatus("APROVADO");
                             p.setConfirmedAt(LocalDateTime.now());
                             pixRepo.save(p);
-                            // Notifica downstream (PDV, auditoria) via Kafka
+                            
                             if (pixEventProducer != null) {
                                 pixEventProducer.publicarPixConfirmado(new PixConfirmadoEvent(
                                         p.getVendaId(), p.getMpPaymentId(), p.getValor()));
@@ -141,7 +141,7 @@ public class PixService {
         }
     }
 
-    // ── Webhook do Mercado Pago ──────────────────────────────────────────────
+    
     public void processarWebhook(Map<String, Object> payload) {
         try {
             Object type = payload.get("type");
@@ -154,12 +154,12 @@ public class PixService {
             if (idObj == null) return;
 
             String mpIdStr = idObj.toString();
-            verificarStatus(mpIdStr);   // atualiza o banco via polling normal
+            verificarStatus(mpIdStr);   
 
         } catch (Exception ignored) {}
     }
 
-    // ── DTO de resposta ──────────────────────────────────────────────────────
+    
     public record PixChargeResponse(
         Long   id,
         String mpPaymentId,

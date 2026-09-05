@@ -22,17 +22,6 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Configuração Kafka. Só é carregada quando kafka.enabled=true (Upstash no Railway).
- * Em desenvolvimento local deixe kafka.enabled=false (padrão) — a aplicação sobe normalmente.
- *
- * Variáveis de ambiente no Railway (obtenha no console.upstash.com):
- *   KAFKA_ENABLED=true
- *   KAFKA_BOOTSTRAP_SERVERS=<broker-url>:9092
- *   KAFKA_SASL_USERNAME=<username>
- *   KAFKA_SASL_PASSWORD=<password>
- *   KAFKA_SECURITY_PROTOCOL=SASL_SSL   (padrão para Upstash)
- */
 @Configuration
 @EnableKafka
 @ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
@@ -50,7 +39,7 @@ public class KafkaConfig {
     @Value("${kafka.security.protocol:SASL_SSL}")
     private String securityProtocol;
 
-    // ── Configurações comuns (SASL_SSL para Upstash) ──────────────────────────
+    
 
     private Map<String, Object> commonProps() {
         Map<String, Object> props = new HashMap<>();
@@ -65,17 +54,17 @@ public class KafkaConfig {
         return props;
     }
 
-    // ── KafkaAdmin (sobrescreve o auto-configurado do Spring Boot) ────────────
-    // Sem isso, o KafkaAdmin usa PLAINTEXT e falha ao tentar verificar os tópicos.
+    
+    
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
         KafkaAdmin admin = new KafkaAdmin(commonProps());
-        admin.setFatalIfBrokerNotAvailable(false); // não derruba o app se broker demorar a responder no startup
+        admin.setFatalIfBrokerNotAvailable(false); 
         return admin;
     }
 
-    // ── Producer ──────────────────────────────────────────────────────────────
+    
 
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
@@ -91,7 +80,7 @@ public class KafkaConfig {
         return new KafkaTemplate<>(producerFactory());
     }
 
-    // ── Consumer genérico (VendaFechadaEvent) ─────────────────────────────────
+    
 
     @Bean
     public ConsumerFactory<String, VendaFechadaEvent> vendaConsumerFactory() {
@@ -114,7 +103,7 @@ public class KafkaConfig {
         return factory;
     }
 
-    // ── Consumer PIX ─────────────────────────────────────────────────────────
+    
 
     @Bean
     public ConsumerFactory<String, PixConfirmadoEvent> pixConsumerFactory() {
@@ -137,7 +126,7 @@ public class KafkaConfig {
         return factory;
     }
 
-    // ── Consumer Alerta ───────────────────────────────────────────────────────
+    
 
     @Bean
     public ConsumerFactory<String, AlertaEstoqueEvent> alertaConsumerFactory() {

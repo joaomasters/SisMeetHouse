@@ -23,14 +23,14 @@ public class FinanceiroController {
     private final DreService          dreService;
     private final ClienteRepository   clienteRepository;
 
-    // ── Clientes ──────────────────────────────────────────────
+    
 
     @GetMapping("/clientes")
     public ResponseEntity<List<Cliente>> listarClientes() {
         return ResponseEntity.ok(clienteRepository.findByAtivoTrue());
     }
 
-    // ── Faturamento ───────────────────────────────────────────
+    
 
     @PostMapping("/faturamento/fechar")
     public ResponseEntity<FaturamentoCliente> gerarFechamento(
@@ -45,7 +45,7 @@ public class FinanceiroController {
         return ResponseEntity.ok(faturamentoService.listarFaturamentosAbertos());
     }
 
-    // ── Contas a Receber ──────────────────────────────────────
+    
 
     @GetMapping("/contas-receber/cliente/{clienteId}")
     public ResponseEntity<List<ContasAReceber>> contasCliente(@PathVariable Long clienteId) {
@@ -64,7 +64,7 @@ public class FinanceiroController {
         return ResponseEntity.ok(faturamentoService.registrarPagamento(contaId, valor));
     }
 
-    // ── DRE ───────────────────────────────────────────────────
+    
 
     @GetMapping("/dre")
     public ResponseEntity<DreDTO> calcularDre(

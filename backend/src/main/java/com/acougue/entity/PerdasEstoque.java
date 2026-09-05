@@ -29,7 +29,7 @@ public class PerdasEstoque {
     private BigDecimal custoTotal;
 
     @Column(nullable = false, length = 50)
-    private String motivo; // VENCIMENTO, AVARIA, FURTO, DESOSSA, OUTROS
+    private String motivo; 
 
     @Column(columnDefinition = "TEXT")
     private String observacao;

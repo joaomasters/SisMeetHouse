@@ -42,7 +42,7 @@ class EstoqueServiceTest {
                 .build();
     }
 
-    // ── entrada ───────────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("entrada: incrementa estoqueAtual corretamente")
@@ -57,9 +57,9 @@ class EstoqueServiceTest {
     @Test
     @DisplayName("entrada: atualiza custo médio ponderado")
     void entrada_atualizaCustoMedio() {
-        // Estoque atual: 10 kg a R$50 = R$500
-        // Entrada:       5 kg a R$60 = R$300
-        // Novo custo médio: R$800 / 15 = R$53,3333
+        
+        
+        
         service.entrada(produto, new BigDecimal("5.000"), new BigDecimal("60.00"),
                 "ENTRADA_NF", "NF-001", 1L);
 
@@ -109,7 +109,7 @@ class EstoqueServiceTest {
         assertThat(produto.getPrecoCusto()).isEqualByComparingTo(custoOriginal);
     }
 
-    // ── saída ─────────────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("saida: decrementa estoqueAtual corretamente")
@@ -160,7 +160,7 @@ class EstoqueServiceTest {
         assertThat(produto.getEstoqueAtual()).isEqualByComparingTo("0.0000");
     }
 
-    // ── ajuste ────────────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("ajuste positivo: incrementa estoque")
@@ -172,7 +172,7 @@ class EstoqueServiceTest {
     @Test
     @DisplayName("ajuste negativo: decrementa estoque sem ir abaixo de zero")
     void ajusteNegativo_naoVaiAbaixoDeZero() {
-        // Estoque=10, ajuste negativo de 50 → resultado deve ser 0 (max com 0)
+        
         service.ajuste(produto, new BigDecimal("50.000"), "AJUSTE_NEGATIVO", "INV-001", 1L);
         assertThat(produto.getEstoqueAtual()).isEqualByComparingTo("0.0000");
     }

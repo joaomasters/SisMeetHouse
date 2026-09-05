@@ -1,46 +1,26 @@
-# ─────────────────────────────────────────────────────────────────
-#  Profile LOCAL — usado com: -Dspring.profiles.active=local
-#  Pré-requisito: PostgreSQL rodando via docker-compose.dev.yml
-#  Kafka e integrações de pagamento ficam desabilitados.
-# ─────────────────────────────────────────────────────────────────
-
 spring:
   datasource:
     url:      jdbc:postgresql://localhost:5432/acougue_db
     username: acougue
     password: acougue@2025
-
   jpa:
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-
   flyway:
     baseline-on-migrate: true
-    out-of-order: false       # garante ordem estrita das migrations
-
-# ── Kafka desabilitado ──────────────────────────────────────────
-# KafkaConfig, producers e consumers NÃO são carregados.
-# A aplicação sobe normalmente sem broker.
+    out-of-order: false
 kafka:
   enabled: false
-
-# ── Pagamentos desabilitados localmente ────────────────────────
-# PIX retorna erro de token inválido se chamado sem token real.
-# Stone TEF apenas funciona com agente local instalado.
 pagamento:
   pix:
     mp-access-token: ""
   stone:
     agent-url: http://localhost:12345
-
-# ── CORS — libera frontend React local ────────────────────────
 acougue:
   cors:
     allowed-origins: http://localhost:5173,http://localhost:3000
-
-# ── Logging verboso para debug ────────────────────────────────
 logging:
   level:
     com.acougue:                                   DEBUG

@@ -6,15 +6,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
 
-/**
- * Cria os tópicos automaticamente se não existirem.
- * Upstash cria com as configurações padrão (1 partição, replicação gerenciada).
- */
 @Configuration
 @ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
 public class KafkaTopicConfig {
 
-    /** Tópico único com constantes reutilizadas por producers e consumers. */
+    
     public static final String VENDAS_FECHADAS = "acougue.vendas.fechadas";
     public static final String PIX_CONFIRMADOS = "acougue.pix.confirmados";
     public static final String ESTOQUE_ALERTAS = "acougue.estoque.alertas";
