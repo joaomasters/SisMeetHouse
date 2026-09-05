@@ -65,6 +65,16 @@ public class KafkaConfig {
         return props;
     }
 
+    // ── KafkaAdmin (sobrescreve o auto-configurado do Spring Boot) ────────────
+    // Sem isso, o KafkaAdmin usa PLAINTEXT e falha ao tentar verificar os tópicos.
+
+    @Bean
+    public KafkaAdmin kafkaAdmin() {
+        KafkaAdmin admin = new KafkaAdmin(commonProps());
+        admin.setFatalIfBrokerNotAvailable(false); // não derruba o app se broker demorar a responder no startup
+        return admin;
+    }
+
     // ── Producer ──────────────────────────────────────────────────────────────
 
     @Bean
