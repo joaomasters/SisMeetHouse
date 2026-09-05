@@ -52,14 +52,48 @@ public class DesossaService {
             BigDecimal saldo = calcularSaldoNf(recebimento, produtoPai);
             if (qtdEntrada.compareTo(saldo) > 0) {
                 throw new BusinessException(String.format(
-                        "Quantidade (%.3f kg) maior que o saldo disponível na NF %s para '%s' (%.3f kg restantes).",
-                        qtdEntrada, recebimento.getNumeroNf(), produtoPai.getNome(), saldo));
+                    "Quantidade (%.3f kg) maior que o saldo disponível na NF %s para '%s' (%.3f kg restantes).",
+                    qtdEntrada, recebimento.getNumeroNf(), produtoPai.getNome(), saldo));
             }
+        }
+
+        // 1ª passada: calcula previsto/real/custo de cada corte SEM mexer em estoque ainda,
+        // para poder validar tudo antes de qualquer efeito colateral.
+        record CorteCalculado(FichaDesossaItem item, BigDecimal qtdPrevista, BigDecimal qtdReal, BigDecimal custoRateado) {}
+        List<CorteCalculado> calculados = new ArrayList<>();
+        BigDecimal somaReais = BigDecimal.ZERO;
+
+        for (FichaDesossaItem item : ficha.getItens()) {
+            BigDecimal percRendimento = item.getPercentualRendimento()
+                    .divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP);
+            BigDecimal qtdPrevista = qtdEntrada.multiply(percRendimento).setScale(3, RoundingMode.HALF_UP);
+
+            BigDecimal qtdReal = (reais != null && reais.containsKey(item.getProdutoFilho().getId()))
+                    ? reais.get(item.getProdutoFilho().getId())
+                    : qtdPrevista;
+
+            if (qtdReal.compareTo(BigDecimal.ZERO) < 0) {
+                throw new BusinessException(
+                    "Quantidade real de '" + item.getProdutoFilho().getNome() + "' não pode ser negativa.");
+            }
+
+            BigDecimal custoRateado = custoTotalBruto.multiply(percRendimento).setScale(4, RoundingMode.HALF_UP);
+            calculados.add(new CorteCalculado(item, qtdPrevista, qtdReal, custoRateado));
+            somaReais = somaReais.add(qtdReal);
+        }
+
+        // Trava dura: a soma dos cortes reais nunca pode ultrapassar a quantidade de entrada
+        // (que já foi validada contra o saldo da NF vinculada, se houver). Sem margem de tolerância.
+        if (somaReais.compareTo(qtdEntrada) > 0) {
+            throw new BusinessException(String.format(
+                "A soma dos cortes reais (%.3f kg) ultrapassa a quantidade de entrada (%.3f kg). " +
+                "Confira se algum peso foi digitado errado.",
+                somaReais, qtdEntrada));
         }
 
         // 1. Baixar produto pai
         estoqueService.saida(produtoPai, qtdEntrada, "SAIDA_DESOSSA",
-                "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
+            "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
 
         ProcessoDesossa processo = ProcessoDesossa.builder()
                 .fichaDesossa(ficha)
@@ -71,30 +105,21 @@ public class DesossaService {
                 .resultados(new ArrayList<>())
                 .build();
 
-        for (FichaDesossaItem item : ficha.getItens()) {
-            BigDecimal percRendimento = item.getPercentualRendimento()
-                    .divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP);
-            BigDecimal qtdPrevista = qtdEntrada.multiply(percRendimento).setScale(3, RoundingMode.HALF_UP);
-
-            BigDecimal qtdReal = (reais != null && reais.containsKey(item.getProdutoFilho().getId()))
-                    ? reais.get(item.getProdutoFilho().getId())
-                    : qtdPrevista;
-
-            // Custo rateado pelo percentual previsto (não pelo real, para não distorcer CMV)
-            BigDecimal custoRateado = custoTotalBruto.multiply(percRendimento).setScale(4, RoundingMode.HALF_UP);
-            BigDecimal custoUnitFilho = qtdReal.compareTo(BigDecimal.ZERO) > 0
-                    ? custoRateado.divide(qtdReal, 4, RoundingMode.HALF_UP)
+        // 2ª passada: agora sim, executa as entradas de estoque de cada corte já validado
+        for (CorteCalculado c : calculados) {
+            BigDecimal custoUnitFilho = c.qtdReal().compareTo(BigDecimal.ZERO) > 0
+                    ? c.custoRateado().divide(c.qtdReal(), 4, RoundingMode.HALF_UP)
                     : BigDecimal.ZERO;
 
-            estoqueService.entrada(item.getProdutoFilho(), qtdReal, custoUnitFilho,
-                    "ENTRADA_DESOSSA", "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
+            estoqueService.entrada(c.item().getProdutoFilho(), c.qtdReal(), custoUnitFilho,
+                "ENTRADA_DESOSSA", "DESOSSA#" + dto.getFichaDesossaId(), dto.getUsuarioId());
 
             ProcessoDesossaResultado resultado = ProcessoDesossaResultado.builder()
                     .processoDesossa(processo)
-                    .produtoFilho(item.getProdutoFilho())
-                    .quantidadePrevista(qtdPrevista)
-                    .quantidadeReal(qtdReal)
-                    .custoRateado(custoRateado)
+                    .produtoFilho(c.item().getProdutoFilho())
+                    .quantidadePrevista(c.qtdPrevista())
+                    .quantidadeReal(c.qtdReal())
+                    .custoRateado(c.custoRateado())
                     .build();
             processo.getResultados().add(resultado);
         }
@@ -114,7 +139,7 @@ public class DesossaService {
                 .map(RecebimentoItem::getQuantidade)
                 .findFirst()
                 .orElseThrow(() -> new BusinessException(
-                        "A NF " + recebimento.getNumeroNf() + " não possui item de '" + produtoPai.getNome() + "'."));
+                    "A NF " + recebimento.getNumeroNf() + " não possui item de '" + produtoPai.getNome() + "'."));
 
         BigDecimal jaProcessado = processoRepo.findByRecebimentoId(recebimento.getId()).stream()
                 .filter(p -> p.getFichaDesossa().getProdutoPai().getId().equals(produtoPai.getId()))
