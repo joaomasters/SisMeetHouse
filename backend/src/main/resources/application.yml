@@ -32,6 +32,25 @@ spring:
       write-dates-as-timestamps: false
     time-zone: America/Sao_Paulo
 
+  # ── Kafka ──────────────────────────────────────────────────────────────────
+  # Upstash: KAFKA_BOOTSTRAP_SERVERS, KAFKA_SASL_USERNAME, KAFKA_SASL_PASSWORD
+  # Habilitar: Railway → Variables → KAFKA_ENABLED=true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: acougue-erp
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.acougue.modules.messaging.events"
+        spring.json.use.type.headers: false
+
 server:
   port: 8080
   servlet:
@@ -48,6 +67,16 @@ acougue:
   nfce:
     ambiente: 2     # 1=Produção, 2=Homologação
     uf: 35          # SP=35, ajuste conforme seu estado
+
+# ── Kafka feature flag + SASL (Upstash/Confluent) ──────────────────────────
+# SASL_SSL=Upstash | PLAINTEXT=local Docker
+kafka:
+  enabled: ${KAFKA_ENABLED:false}
+  sasl:
+    username: ${KAFKA_SASL_USERNAME:}
+    password: ${KAFKA_SASL_PASSWORD:}
+  security:
+    protocol: ${KAFKA_SECURITY_PROTOCOL:SASL_SSL}
 
 pagamento:
   pix:
