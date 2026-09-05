@@ -1,4 +1,4 @@
-# 🥩 Açougue ERP — Full-Stack Point-of-Sale System
+# Açougue ERP — Full-Stack Point-of-Sale System
 
 > A production-grade ERP and PDV (Point of Sale) system built for butcher shops — handling sales, inventory, financial reports, async Kafka messaging, and digital payments.
 
