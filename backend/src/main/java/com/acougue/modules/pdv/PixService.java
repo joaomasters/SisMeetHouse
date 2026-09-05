@@ -2,10 +2,13 @@ package com.acougue.modules.pdv;
 
 import com.acougue.entity.PagamentoPix;
 import com.acougue.exception.BusinessException;
+import com.acougue.modules.messaging.events.PixConfirmadoEvent;
+import com.acougue.modules.messaging.producers.PixEventProducer;
 import com.acougue.repository.PagamentoPixRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +30,10 @@ public class PixService {
 
     private final PagamentoPixRepository pixRepo;
     private final ObjectMapper objectMapper;
+
+    /** Opcional — só existe quando kafka.enabled=true. */
+    @Autowired(required = false)
+    private PixEventProducer pixEventProducer;
 
     // ── Cria cobrança PIX via Mercado Pago ──────────────────────────────────
     public PixChargeResponse criarCobranca(BigDecimal valor, Long vendaId) {
@@ -109,7 +116,7 @@ public class PixService {
                 default                          -> "ERRO";
             };
 
-            // Atualiza no banco quando aprovado
+            // Atualiza no banco e publica evento Kafka quando aprovado
             if ("APROVADO".equals(normalizado)) {
                 try {
                     pixRepo.findByMpPaymentId(Long.parseLong(mpPaymentId)).ifPresent(p -> {
@@ -117,6 +124,11 @@ public class PixService {
                             p.setStatus("APROVADO");
                             p.setConfirmedAt(LocalDateTime.now());
                             pixRepo.save(p);
+                            // Notifica downstream (PDV, auditoria) via Kafka
+                            if (pixEventProducer != null) {
+                                pixEventProducer.publicarPixConfirmado(new PixConfirmadoEvent(
+                                        p.getVendaId(), p.getMpPaymentId(), p.getValor()));
+                            }
                         }
                     });
                 } catch (NumberFormatException ignored) {}

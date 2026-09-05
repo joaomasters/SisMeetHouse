@@ -5,20 +5,26 @@ import com.acougue.exception.BusinessException;
 import com.acougue.modules.balanca.EanBalancaParser;
 import com.acougue.modules.balanca.dto.EanParseResult;
 import com.acougue.modules.estoque.EstoqueService;
+import com.acougue.modules.messaging.events.VendaFechadaEvent;
 import com.acougue.modules.pdv.dto.*;
 import com.acougue.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class PdvService {
+
+    /** Publicador de Spring ApplicationEvents — VendaEventProducer escuta com @TransactionalEventListener. */
+    private final ApplicationEventPublisher eventPublisher;
 
     private final VendaRepository          vendaRepo;
     private final ItensVendaRepository     itensRepo;
@@ -156,18 +162,32 @@ public class PdvService {
             }
         }
 
-        // Baixar estoque de cada item vendido
+        // Baixar estoque de cada item vendido (síncrono — garante consistência)
         List<ItensVenda> itens = itensRepo.findByVendaId(venda.getId());
+        List<VendaFechadaEvent.ItemEvent> itemEvents = new ArrayList<>();
         for (ItensVenda item : itens) {
-            estoqueService.saida(item.getProduto(), item.getQuantidade(),
-                "SAIDA_VENDA", "VENDA#" + venda.getId(), venda.getOperadorId());
+            Produto p = item.getProduto();
+            estoqueService.saida(p, item.getQuantidade(),
+                    "SAIDA_VENDA", "VENDA#" + venda.getId(), venda.getOperadorId());
+            // Captura estoque pós-baixa para o evento (usado pelo EstoqueConsumer para alertas)
+            itemEvents.add(new VendaFechadaEvent.ItemEvent(
+                    p.getId(), p.getNome(), item.getQuantidade(),
+                    p.getEstoqueAtual(),
+                    p.getEstoqueMinimo() != null ? p.getEstoqueMinimo() : BigDecimal.ZERO
+            ));
         }
 
         BigDecimal troco = totalPago.subtract(venda.getTotal()).max(BigDecimal.ZERO);
         venda.setTroco(troco);
         venda.setStatus("FECHADA");
 
-        return vendaRepo.save(venda);
+        Venda salva = vendaRepo.save(venda);
+
+        // Publica Spring ApplicationEvent — VendaEventProducer envia ao Kafka APÓS commit
+        eventPublisher.publishEvent(new VendaFechadaEvent(
+                salva.getId(), salva.getOperadorId(), salva.getTotal(), itemEvents));
+
+        return salva;
     }
 
     @Transactional

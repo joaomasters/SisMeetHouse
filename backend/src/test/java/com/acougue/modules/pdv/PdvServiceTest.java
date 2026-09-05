@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,15 +27,16 @@ import static org.mockito.Mockito.*;
 @DisplayName("PdvService")
 class PdvServiceTest {
 
-    @Mock VendaRepository          vendaRepo;
-    @Mock ItensVendaRepository     itensRepo;
-    @Mock PagamentoVendaRepository pagRepo;
-    @Mock ProdutoRepository        produtoRepo;
-    @Mock ClienteRepository        clienteRepo;
-    @Mock CaixaRepository          caixaRepo;
-    @Mock ContasAReceberRepository contasRepo;
-    @Mock EstoqueService           estoqueService;
-    @Mock EanBalancaParser         eanParser;
+    @Mock VendaRepository            vendaRepo;
+    @Mock ItensVendaRepository       itensRepo;
+    @Mock PagamentoVendaRepository   pagRepo;
+    @Mock ProdutoRepository          produtoRepo;
+    @Mock ClienteRepository          clienteRepo;
+    @Mock CaixaRepository            caixaRepo;
+    @Mock ContasAReceberRepository   contasRepo;
+    @Mock EstoqueService             estoqueService;
+    @Mock EanBalancaParser           eanParser;
+    @Mock ApplicationEventPublisher  eventPublisher;
 
     @InjectMocks PdvService service;
 
