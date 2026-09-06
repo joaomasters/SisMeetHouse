@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Scissors, ChevronRight, Link2 } from 'lucide-react'
+import { Scissors, ChevronRight, Link2, History, AlertTriangle } from 'lucide-react'
 import { api } from '@/shared/api/axios'
 import toast from 'react-hot-toast'
-import type { FichaDesossa, ExecutarDesossaDTO } from '@/types/produto'
+import type { FichaDesossa, ExecutarDesossaDTO, ProcessoDesossa } from '@/types/produto'
 
 interface Recebimento {
   id: number
@@ -23,6 +23,7 @@ export default function DesossaPage() {
   const [qtdsReais, setQtdsReais]       = useState<Record<number, string>>({})
   const [recebimentoId, setRecebimentoId] = useState('')
   const [preenchidoPelaNf, setPreenchidoPelaNf] = useState(false)
+  const [confirmouPerdaAnormal, setConfirmouPerdaAnormal] = useState(false)
 
   const { data: saldoNf } = useQuery<number>({
     queryKey: ['saldo-nf', recebimentoId, fichaSel?.produtoPai.id],
@@ -42,23 +43,34 @@ export default function DesossaPage() {
     queryFn: () => api.get('/estoque/recebimentos').then(r => r.data),
   })
 
+  const { data: historico = [] } = useQuery<ProcessoDesossa[]>({
+    queryKey: ['desossa-historico', fichaSel?.id],
+    queryFn: () => api.get(`/estoque/desossa/historico/${fichaSel!.id}`).then(r => r.data),
+    enabled: !!fichaSel,
+  })
+
   const executar = useMutation({
     mutationFn: (dto: ExecutarDesossaDTO) =>
       api.post('/estoque/desossa/executar', dto),
     onSuccess: () => {
       toast.success('Desossa executada e estoque atualizado!')
       qc.invalidateQueries({ queryKey: ['produtos'] })
+      qc.invalidateQueries({ queryKey: ['desossa-historico'] })
       setFichaSel(null)
       setQtdEntrada('')
       setCustoPorKg('')
       setQtdsReais({})
       setRecebimentoId('')
       setPreenchidoPelaNf(false)
+      setConfirmouPerdaAnormal(false)
     },
   })
 
   function handleExecutar() {
     if (!fichaSel || !qtdEntrada) return
+    const notaPerdaAnormal = rendimentoAbaixoDoEsperado
+      ? `[Perda acima do esperado: previsto ${kg3(somaPrevista)} kg, real ${kg3(somaReal)} kg — confirmado pelo operador]`
+      : ''
     const dto: ExecutarDesossaDTO = {
       fichaDesossaId: fichaSel.id,
       quantidadeKgEntrada: parseFloat(qtdEntrada),
@@ -70,11 +82,30 @@ export default function DesossaPage() {
       }, {} as Record<number, number>),
       usuarioId: 1,
       recebimentoId: recebimentoId ? parseInt(recebimentoId) : null,
+      observacao: notaPerdaAnormal || undefined,
     }
     executar.mutate(dto)
   }
 
   const qtdNum = parseFloat(qtdEntrada) || 0
+
+  // Soma prevista (pela ficha) x soma real (o que o operador está digitando).
+  // Usados para alertar quando o rendimento real fica muito abaixo do esperado.
+  const somaPrevista = fichaSel
+    ? fichaSel.itens.reduce((acc, item) => acc + qtdNum * (item.percentualRendimento / 100), 0)
+    : 0
+  const somaReal = fichaSel
+    ? fichaSel.itens.reduce((acc, item) => {
+        const prevista = qtdNum * (item.percentualRendimento / 100)
+        const real = qtdsReais[item.produtoFilho.id]
+        return acc + (real !== undefined && real !== '' ? parseFloat(real) || 0 : prevista)
+      }, 0)
+    : 0
+  // A própria ficha já define o rendimento esperado (ex: 92%, com 8% de perda cadastrada).
+  // Qualquer soma real abaixo disso já é pior do que o previsto, sem margem extra inventada.
+  // O 0.001 é só pra evitar ruído de arredondamento de ponto flutuante do JS, não é tolerância de negócio.
+  const rendimentoAbaixoDoEsperado = somaPrevista > 0 && somaReal < somaPrevista - 0.001
+
   const recebSel = recebimentos.find(r => r.id === parseInt(recebimentoId))
 
   return (
@@ -116,6 +147,50 @@ export default function DesossaPage() {
               <p className="text-gray-400 text-sm">Nenhuma ficha cadastrada.</p>
             )}
           </div>
+
+          {/* Histórico de execuções, com destaque para perdas anormais */}
+          {fichaSel && (
+            <div className="mt-6">
+              <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+                <History size={14} /> Histórico de Execuções
+              </h2>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {historico.map(p => {
+                  const anormal = !!p.observacao
+                  return (
+                    <div
+                      key={p.id}
+                      className={`rounded-lg border px-3 py-2 text-sm ${
+                        anormal ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-800">
+                          {new Date(p.dataProcesso).toLocaleDateString('pt-BR')} — {kg3(p.quantidadeEntrada)} kg
+                        </span>
+                        {anormal && (
+                          <span className="flex items-center gap-1 text-orange-700 text-xs font-semibold">
+                            <AlertTriangle size={12} /> Perda anormal
+                          </span>
+                        )}
+                      </div>
+                      {p.recebimento && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          NF {p.recebimento.numeroNf ?? 'S/N'} — {p.recebimento.fornecedor}
+                        </p>
+                      )}
+                      {anormal && (
+                        <p className="text-xs text-orange-700 mt-1">{p.observacao}</p>
+                      )}
+                    </div>
+                  )
+                })}
+                {historico.length === 0 && (
+                  <p className="text-gray-400 text-sm">Nenhuma execução registrada ainda.</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Formulário de execução */}
@@ -226,10 +301,13 @@ export default function DesossaPage() {
                       <input
                         type="number" step="0.001"
                         value={qtdsReais[item.produtoFilho.id] ?? ''}
-                        onChange={e => setQtdsReais(prev => ({
-                          ...prev,
-                          [item.produtoFilho.id]: e.target.value,
-                        }))}
+                        onChange={e => {
+                          setQtdsReais(prev => ({
+                            ...prev,
+                            [item.produtoFilho.id]: e.target.value,
+                          }))
+                          setConfirmouPerdaAnormal(false)
+                        }}
                         placeholder={kg3(prevista)}
                         className="w-28 border border-gray-300 rounded px-2 py-1 text-sm text-right"
                       />
@@ -246,9 +324,30 @@ export default function DesossaPage() {
               </p>
             )}
 
+            {rendimentoAbaixoDoEsperado && (
+              <div className="text-xs bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 space-y-2">
+                <p className="text-orange-700 font-medium">
+                  ⚠️ Rendimento real ({kg3(somaReal)} kg) está bem abaixo do previsto pela ficha ({kg3(somaPrevista)} kg).
+                </p>
+                <label className="flex items-center gap-2 text-orange-800 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={confirmouPerdaAnormal}
+                    onChange={e => setConfirmouPerdaAnormal(e.target.checked)}
+                    className="rounded border-orange-400"
+                  />
+                  Confirmo que revisei os pesos e a perda está correta.
+                </label>
+              </div>
+            )}
+
             <button
               onClick={handleExecutar}
-              disabled={!qtdEntrada || executar.isPending || (recebimentoId !== '' && saldoNf !== undefined && qtdNum > saldoNf)}
+              disabled={
+                !qtdEntrada || executar.isPending ||
+                (recebimentoId !== '' && saldoNf !== undefined && qtdNum > saldoNf) ||
+                (rendimentoAbaixoDoEsperado && !confirmouPerdaAnormal)
+              }
               className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium
                          disabled:opacity-60 transition-colors"
             >

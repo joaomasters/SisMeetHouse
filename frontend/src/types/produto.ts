@@ -48,3 +48,22 @@ export interface ExecutarDesossaDTO {
   observacao?: string
   recebimentoId?: number | null
 }
+
+export interface ProcessoDesossaResultado {
+  id: number
+  produtoFilho: Produto
+  quantidadePrevista: number
+  quantidadeReal: number
+  custoRateado: number
+}
+
+export interface ProcessoDesossa {
+  id: number
+  quantidadeEntrada: number
+  dataProcesso: string
+  usuarioId?: number
+  observacao?: string
+  status: string
+  recebimento?: { id: number; numeroNf: string | null; fornecedor: string } | null
+  resultados: ProcessoDesossaResultado[]
+}
