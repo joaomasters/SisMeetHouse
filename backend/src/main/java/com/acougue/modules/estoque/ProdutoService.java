@@ -1,7 +1,6 @@
 package com.acougue.modules.estoque;
 
 import com.acougue.entity.Produto;
-import com.acougue.exception.BusinessException;
 import com.acougue.repository.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +60,9 @@ public class ProdutoService {
         existente.setNome(dados.getNome());
         existente.setDescricao(dados.getDescricao());
         existente.setPrecoVenda(dados.getPrecoVenda());
-        existente.setPrecoCusto(dados.getPrecoCusto());
+        // precoCusto NÃO é editável manualmente — é calculado automaticamente pelo
+        // custo médio ponderado a cada entrada de estoque (EstoqueService.atualizarCustoMedio).
+        // Aceitar edição manual aqui corromperia esse cálculo silenciosamente.
         existente.setUnidadeMedida(dados.getUnidadeMedida());
         existente.setTipoProduto(dados.getTipoProduto());
         existente.setCodigoBalanca(dados.getCodigoBalanca());
