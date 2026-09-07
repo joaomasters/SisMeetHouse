@@ -95,12 +95,19 @@ export default function ProdutoForm({ produto, onClose, onSaved }: Props) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Custo (R$)</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Custo (R$){isEdicao && <span className="text-gray-400 font-normal"> — automático</span>}
+              </label>
               <input
                 type="number" step="0.0001"
+                disabled={isEdicao}
                 {...register('precoCusto')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500
+                  ${isEdicao ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'border-gray-300'}`}
               />
+              {isEdicao && (
+                <p className="text-[11px] text-gray-400 mt-1">Calculado pelas entradas de estoque.</p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Estoque Mín.</label>
