@@ -137,8 +137,8 @@ public class PdvService {
 
         if (totalPago.compareTo(venda.getTotal()) < 0) {
             throw new BusinessException(String.format(
-                "Pagamento insuficiente. Venda: R$ %.2f | Pago: R$ %.2f",
-                venda.getTotal(), totalPago));
+                    "Pagamento insuficiente. Venda: R$ %.2f | Pago: R$ %.2f",
+                    venda.getTotal(), totalPago));
         }
 
         for (PagamentoDTO pag : dto.getPagamentos()) {
@@ -160,7 +160,7 @@ public class PdvService {
         List<ItensVenda> itens = itensRepo.findByVendaId(venda.getId());
         for (ItensVenda item : itens) {
             estoqueService.saida(item.getProduto(), item.getQuantidade(),
-                "SAIDA_VENDA", "VENDA#" + venda.getId(), venda.getOperadorId());
+                    "SAIDA_VENDA", "VENDA#" + venda.getId(), venda.getOperadorId());
         }
 
         BigDecimal troco = totalPago.subtract(venda.getTotal()).max(BigDecimal.ZERO);
@@ -175,6 +175,23 @@ public class PdvService {
         Venda venda = buscarVendaAberta(vendaId);
         venda.setStatus("CANCELADA");
         return vendaRepo.save(venda);
+    }
+
+    /**
+     * Lista todas as comandas (vendas com status ABERTA) de um caixa —
+     * usado pela tela de PDV para mostrar as comandas abertas simultaneamente
+     * e permitir alternar entre elas.
+     */
+    public List<Venda> listarVendasAbertas(Long caixaId) {
+        return vendaRepo.findByCaixaIdAndStatus(caixaId, "ABERTA");
+    }
+
+    /**
+     * Busca uma comanda específica em aberto — usado quando o operador clica
+     * numa comanda da lista para retomar/continuar aquela venda.
+     */
+    public Venda buscarComanda(Long vendaId) {
+        return buscarVendaAberta(vendaId);
     }
 
     // ── Privados ───────────────────────────────────────────────
