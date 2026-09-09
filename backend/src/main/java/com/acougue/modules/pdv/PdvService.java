@@ -5,26 +5,20 @@ import com.acougue.exception.BusinessException;
 import com.acougue.modules.balanca.EanBalancaParser;
 import com.acougue.modules.balanca.dto.EanParseResult;
 import com.acougue.modules.estoque.EstoqueService;
-import com.acougue.modules.messaging.events.VendaFechadaEvent;
 import com.acougue.modules.pdv.dto.*;
 import com.acougue.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class PdvService {
-
-    
-    private final ApplicationEventPublisher eventPublisher;
 
     private final VendaRepository          vendaRepo;
     private final ItensVendaRepository     itensRepo;
@@ -36,7 +30,7 @@ public class PdvService {
     private final EstoqueService           estoqueService;
     private final EanBalancaParser         eanParser;
 
-    
+    // ── Caixa ──────────────────────────────────────────────────
 
     @Transactional
     public Caixa abrirCaixa(Long operadorId, BigDecimal valorAbertura) {
@@ -61,7 +55,7 @@ public class PdvService {
         return caixaRepo.save(caixa);
     }
 
-    
+    // ── Venda ──────────────────────────────────────────────────
 
     @Transactional
     public Venda abrirVenda(AbrirVendaDTO dto) {
@@ -88,8 +82,9 @@ public class PdvService {
         return vendaRepo.save(venda);
     }
 
-    
-
+    /**
+     * Decodifica o barcode e retorna ItemVendaDTO pronto para adicionar ao cupom.
+     */
     public ItemVendaDTO processarBarcode(String ean13) {
         if (ean13.startsWith("2") && ean13.length() == 13) {
             return processarEanBalanca(ean13);
@@ -142,8 +137,8 @@ public class PdvService {
 
         if (totalPago.compareTo(venda.getTotal()) < 0) {
             throw new BusinessException(String.format(
-                "Pagamento insuficiente. Venda: R$ %.2f | Pago: R$ %.2f",
-                venda.getTotal(), totalPago));
+                    "Pagamento insuficiente. Venda: R$ %.2f | Pago: R$ %.2f",
+                    venda.getTotal(), totalPago));
         }
 
         for (PagamentoDTO pag : dto.getPagamentos()) {
@@ -161,32 +156,18 @@ public class PdvService {
             }
         }
 
-        
+        // Baixar estoque de cada item vendido
         List<ItensVenda> itens = itensRepo.findByVendaId(venda.getId());
-        List<VendaFechadaEvent.ItemEvent> itemEvents = new ArrayList<>();
         for (ItensVenda item : itens) {
-            Produto p = item.getProduto();
-            estoqueService.saida(p, item.getQuantidade(),
+            estoqueService.saida(item.getProduto(), item.getQuantidade(),
                     "SAIDA_VENDA", "VENDA#" + venda.getId(), venda.getOperadorId());
-            
-            itemEvents.add(new VendaFechadaEvent.ItemEvent(
-                    p.getId(), p.getNome(), item.getQuantidade(),
-                    p.getEstoqueAtual(),
-                    p.getEstoqueMinimo() != null ? p.getEstoqueMinimo() : BigDecimal.ZERO
-            ));
         }
 
         BigDecimal troco = totalPago.subtract(venda.getTotal()).max(BigDecimal.ZERO);
         venda.setTroco(troco);
         venda.setStatus("FECHADA");
 
-        Venda salva = vendaRepo.save(venda);
-
-        
-        eventPublisher.publishEvent(new VendaFechadaEvent(
-                salva.getId(), salva.getOperadorId(), salva.getTotal(), itemEvents));
-
-        return salva;
+        return vendaRepo.save(venda);
     }
 
     @Transactional
@@ -196,7 +177,24 @@ public class PdvService {
         return vendaRepo.save(venda);
     }
 
-    
+    /**
+     * Lista todas as comandas (vendas com status ABERTA) de um caixa —
+     * usado pela tela de PDV para mostrar as comandas abertas simultaneamente
+     * e permitir alternar entre elas.
+     */
+    public List<Venda> listarVendasAbertas(Long caixaId) {
+        return vendaRepo.findByCaixaIdAndStatus(caixaId, "ABERTA");
+    }
+
+    /**
+     * Busca uma comanda específica em aberto — usado quando o operador clica
+     * numa comanda da lista para retomar/continuar aquela venda.
+     */
+    public Venda buscarComanda(Long vendaId) {
+        return buscarVendaAberta(vendaId);
+    }
+
+    // ── Privados ───────────────────────────────────────────────
 
     private ItemVendaDTO processarEanBalanca(String ean13) {
         int codigoBalanca = Integer.parseInt(ean13.substring(1, 6));

@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react'
-import { ShoppingBag, Wifi, WifiOff, Trash2 } from 'lucide-react'
+import { ShoppingBag, Wifi, WifiOff, Trash2, Plus, User } from 'lucide-react'
 import { useBarcodeScan } from '@/shared/hooks/useBarcodeScan'
 import { usePdv } from './hooks/usePdv'
 import ListaItens from './components/ListaItens'
 import ModalPagamento from './components/ModalPagamento'
+import NovaComandaModal from './components/NovaComandaModal'
 
 const brl = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function PDVPage() {
   const {
-    venda, loading, scanLoading, totalVenda,
+    venda, comandas, loading, scanLoading, totalVenda,
     adicionarItem, removerItem, fecharVenda, cancelarVenda,
+    iniciarVenda, selecionarComanda,
   } = usePdv()
 
   const [showPagto, setShowPagto] = useState(false)
+  const [showNovaComanda, setShowNovaComanda] = useState(false)
   const [hora, setHora]           = useState(new Date())
 
   // Relógio
@@ -68,6 +71,36 @@ export default function PDVPage() {
           <span>{hora.toLocaleDateString('pt-BR')}</span>
         </div>
       </header>
+
+      {/* ── Barra de Comandas ── */}
+      <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/60 border-b border-gray-800 overflow-x-auto shrink-0">
+        <button
+          onClick={() => setShowNovaComanda(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                     bg-red-600 hover:bg-red-500 transition-colors shrink-0"
+        >
+          <Plus size={14} /> Nova Comanda
+        </button>
+
+        {comandas.length === 0 && (
+          <span className="text-xs text-gray-600 px-2">Nenhuma comanda aberta</span>
+        )}
+
+        {comandas.map(c => (
+          <button
+            key={c.id}
+            onClick={() => selecionarComanda(c.id)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors
+              ${venda?.id === c.id
+                ? 'bg-emerald-700 text-white'
+                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
+          >
+            <User size={12} />
+            {c.cliente?.nome ?? `Comanda #${c.id}`}
+            <span className="opacity-70 tabular-nums">{brl(c.total)}</span>
+          </button>
+        ))}
+      </div>
 
       {/* ── Corpo ── */}
       <div className="flex flex-1 overflow-hidden">
@@ -140,6 +173,17 @@ export default function PDVPage() {
             setShowPagto(false)
           }}
           onCancelar={() => setShowPagto(false)}
+        />
+      )}
+
+      {/* Modal de nova comanda */}
+      {showNovaComanda && (
+        <NovaComandaModal
+          onSelecionar={async (clienteId) => {
+            await iniciarVenda(clienteId)
+            setShowNovaComanda(false)
+          }}
+          onFechar={() => setShowNovaComanda(false)}
         />
       )}
     </div>

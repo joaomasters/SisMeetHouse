@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/pdv")
@@ -17,7 +18,7 @@ public class PdvController {
 
     private final PdvService pdvService;
 
-    
+    // ── Caixa ─────────────────────────────────────────────────
 
     @PostMapping("/caixa/abrir")
     public ResponseEntity<Caixa> abrirCaixa(
@@ -33,11 +34,21 @@ public class PdvController {
         return ResponseEntity.ok(pdvService.fecharCaixa(id, valorInformado));
     }
 
-    
+    // ── Venda ─────────────────────────────────────────────────
 
     @PostMapping("/vendas/abrir")
     public ResponseEntity<Venda> abrirVenda(@RequestBody @Valid AbrirVendaDTO dto) {
         return ResponseEntity.ok(pdvService.abrirVenda(dto));
+    }
+
+    @GetMapping("/vendas/abertas")
+    public ResponseEntity<List<Venda>> listarVendasAbertas(@RequestParam Long caixaId) {
+        return ResponseEntity.ok(pdvService.listarVendasAbertas(caixaId));
+    }
+
+    @GetMapping("/vendas/{id}")
+    public ResponseEntity<Venda> buscarComanda(@PathVariable Long id) {
+        return ResponseEntity.ok(pdvService.buscarComanda(id));
     }
 
     @GetMapping("/barcode/{ean13}")

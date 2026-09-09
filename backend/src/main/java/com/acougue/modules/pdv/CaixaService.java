@@ -22,6 +22,16 @@ public class CaixaService {
     private final VendaRepository          vendaRepo;
     private final PagamentoVendaRepository pagamentoRepo;
 
+    /**
+     * Busca o caixa aberto no momento — evita que o frontend precise
+     * "adivinhar"/fixar um id de caixa. Se não houver nenhum caixa aberto,
+     * o operador precisa abrir um primeiro.
+     */
+    public Caixa buscarCaixaAberto() {
+        return caixaRepo.findFirstByStatusOrderByDataAberturaDesc("ABERTO")
+                .orElseThrow(() -> new BusinessException("Nenhum caixa aberto no momento. Abra um caixa antes de vender."));
+    }
+
     @Transactional
     public SangriaCaixa registrarMovimento(Long caixaId, SangriaDTO dto) {
         Caixa caixa = buscarCaixaAberto(caixaId);

@@ -1,6 +1,7 @@
 package com.acougue.modules.pdv;
 
 import com.acougue.entity.SangriaCaixa;
+import com.acougue.entity.Caixa;
 import com.acougue.modules.pdv.dto.FechamentoCaixaDetalhadoDTO;
 import com.acougue.modules.pdv.dto.SangriaDTO;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,11 @@ import java.util.List;
 public class CaixaController {
 
     private final CaixaService caixaService;
+
+    @GetMapping("/aberto")
+    public ResponseEntity<Caixa> caixaAberto() {
+        return ResponseEntity.ok(caixaService.buscarCaixaAberto());
+    }
 
     @PostMapping("/{id}/sangria")
     public ResponseEntity<SangriaCaixa> sangria(
