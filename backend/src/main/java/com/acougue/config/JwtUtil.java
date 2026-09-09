@@ -11,7 +11,7 @@ import java.util.Date;
 public class JwtUtil {
 
     private static final String SECRET = "acougue-erp-jwt-secret-key-2024-min-256bits!!";
-    private static final long EXPIRATION_MS = 24L * 60 * 60 * 1000; // 24h
+    private static final long EXPIRATION_MS = 24L * 60 * 60 * 1000; 
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
     public String generateToken(String username) {

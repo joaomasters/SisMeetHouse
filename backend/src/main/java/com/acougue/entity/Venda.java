@@ -27,10 +27,10 @@ public class Venda {
     private Cliente cliente;
 
     @Column(name = "tipo_venda", nullable = false, length = 20)
-    private String tipoVenda; // PDV, FATURAMENTO, DELIVERY
+    private String tipoVenda; 
 
     @Builder.Default
-    private String status = "ABERTA"; // ABERTA, FECHADA, CANCELADA
+    private String status = "ABERTA"; 
 
     @Column(precision = 12, scale = 2)
     @Builder.Default

@@ -22,7 +22,7 @@ public class PagamentoVenda {
     private Venda venda;
 
     @Column(name = "forma_pagamento", nullable = false, length = 20)
-    private String formaPagamento; // DINHEIRO, CREDITO, DEBITO, PIX, FIADO, CONVENIO, VOUCHER
+    private String formaPagamento; 
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal valor;

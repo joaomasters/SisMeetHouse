@@ -34,7 +34,7 @@ class DesossaServiceTest {
 
     @InjectMocks DesossaService service;
 
-    // ── fixtures ──────────────────────────────────────────────────────────────
+    
 
     private Produto boi;
     private Produto picanha;
@@ -78,7 +78,7 @@ class DesossaServiceTest {
         itemNf.setRecebimento(nf);
     }
 
-    // ── calcularSaldoNf ───────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("calcularSaldoNf: retorna quantidade total quando não há desossas anteriores")
@@ -113,7 +113,7 @@ class DesossaServiceTest {
                 .hasMessageContaining("não possui item");
     }
 
-    // ── criarFicha ────────────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("criarFicha: lança BusinessException quando produto pai não existe")
@@ -129,7 +129,7 @@ class DesossaServiceTest {
     @Test
     @DisplayName("criarFicha: calcula perdaTotalPercentual corretamente (100 - soma rendimentos)")
     void criarFicha_calculaPerdaTotalPercentual() {
-        // 15% picanha + 20% contrafilé = 35% | perda = 65%
+        
         List<FichaDesossaDTO.ItemDTO> itens = List.of(
                 new FichaDesossaDTO.ItemDTO(2L, new BigDecimal("15.00"), 0),
                 new FichaDesossaDTO.ItemDTO(3L, new BigDecimal("20.00"), 1)
@@ -192,7 +192,7 @@ class DesossaServiceTest {
                 .isGreaterThanOrEqualTo(BigDecimal.ZERO);
     }
 
-    // ── inativar / reativar ───────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("inativarFicha: seta ativo=false e salva")
@@ -230,7 +230,7 @@ class DesossaServiceTest {
                 .hasMessageContaining("Ficha não encontrada");
     }
 
-    // ── executarDesossa ───────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("executarDesossa: lança BusinessException quando ficha não existe")
@@ -250,7 +250,7 @@ class DesossaServiceTest {
     void executarDesossa_quantidadeExcedeSaldoNf_lancaExcecao() {
         ExecutarDesossaDTO dto = new ExecutarDesossaDTO();
         dto.setFichaDesossaId(1L);
-        dto.setQuantidadeKgEntrada(new BigDecimal("150.000")); // NF só tem 100 kg
+        dto.setQuantidadeKgEntrada(new BigDecimal("150.000")); 
         dto.setRecebimentoId(1L);
         dto.setCustoPorKg(new BigDecimal("20.00"));
         dto.setUsuarioId(1L);
@@ -267,9 +267,9 @@ class DesossaServiceTest {
     @Test
     @DisplayName("executarDesossa: processa cortes filhos com custos rateados")
     void executarDesossa_processaCortesFilhosComCustoRateado() {
-        // Entrada: 100 kg a R$20/kg = R$2000 custo total
-        // Picanha: 15% → 15 kg, custo rateado = 0.15 * 2000 = R$300 → R$20/kg
-        // Contrafilé: 20% → 20 kg, custo rateado = 0.20 * 2000 = R$400 → R$20/kg
+        
+        
+        
         ExecutarDesossaDTO dto = new ExecutarDesossaDTO();
         dto.setFichaDesossaId(1L);
         dto.setQuantidadeKgEntrada(new BigDecimal("100.000"));
@@ -281,11 +281,11 @@ class DesossaServiceTest {
 
         service.executarDesossa(dto);
 
-        // Verifica baixa do produto pai
+        
         verify(estoqueService).saida(eq(boi), eq(new BigDecimal("100.000")),
                 eq("SAIDA_DESOSSA"), anyString(), eq(1L));
 
-        // Verifica entrada dos filhos (2 cortes)
+        
         verify(estoqueService, times(2)).entrada(any(), any(), any(),
                 eq("ENTRADA_DESOSSA"), anyString(), eq(1L));
     }

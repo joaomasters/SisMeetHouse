@@ -25,7 +25,7 @@ public class Cliente {
 
     @Column(name = "tipo_pessoa", length = 5)
     @Builder.Default
-    private String tipoPessoa = "PF"; // PF, PJ
+    private String tipoPessoa = "PF"; 
 
     @Column(length = 20)
     private String telefone;
@@ -38,7 +38,7 @@ public class Cliente {
 
     @Column(name = "tipo_cliente", length = 20)
     @Builder.Default
-    private String tipoCliente = "VAREJO"; // VAREJO, ATACADO, RESTAURANTE, CONVENIADO
+    private String tipoCliente = "VAREJO"; 
 
     @Column(name = "limite_credito", precision = 12, scale = 2)
     @Builder.Default

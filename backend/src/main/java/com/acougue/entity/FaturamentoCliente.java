@@ -40,7 +40,7 @@ public class FaturamentoCliente {
     private BigDecimal saldoDevedor = BigDecimal.ZERO;
 
     @Builder.Default
-    private String status = "ABERTO"; // ABERTO, PARCIAL, QUITADO, VENCIDO
+    private String status = "ABERTO"; 
 
     @Column(name = "data_vencimento")
     private LocalDate dataVencimento;

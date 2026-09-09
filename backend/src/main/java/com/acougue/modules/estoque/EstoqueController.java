@@ -24,7 +24,7 @@ public class EstoqueController {
     private final DesossaService                 desossaService;
     private final MovimentacaoEstoqueRepository  movRepo;
 
-    // ── Produtos ──────────────────────────────────────────────
+    
 
     @GetMapping("/produtos")
     public ResponseEntity<List<Produto>> listarProdutos(
@@ -62,7 +62,7 @@ public class EstoqueController {
         return ResponseEntity.ok(produtoService.alertasEstoqueMinimo());
     }
 
-    // ── Fichas de Desossa ──────────────────────────────────────
+    
 
     @GetMapping("/fichas-desossa")
     public ResponseEntity<List<FichaDesossa>> listarFichas(
@@ -100,7 +100,7 @@ public class EstoqueController {
         return ResponseEntity.ok(desossaService.buscarFicha(id));
     }
 
-    // ── Execução de Desossa ────────────────────────────────────
+    
 
     @PostMapping("/desossa/executar")
     public ResponseEntity<ProcessoDesossa> executarDesossa(
@@ -119,7 +119,7 @@ public class EstoqueController {
         return ResponseEntity.ok(desossaService.listarPorFicha(fichaId));
     }
 
-    // ── Movimentações ─────────────────────────────────────────
+    
 
     @GetMapping("/movimentacoes")
     public ResponseEntity<List<MovimentacaoEstoque>> listarMovimentacoes(

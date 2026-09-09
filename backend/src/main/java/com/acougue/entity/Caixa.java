@@ -35,7 +35,7 @@ public class Caixa {
     private BigDecimal valorCalculado;
 
     @Builder.Default
-    private String status = "ABERTO"; // ABERTO, FECHADO
+    private String status = "ABERTO"; 
 
     @Column(columnDefinition = "TEXT")
     private String observacao;

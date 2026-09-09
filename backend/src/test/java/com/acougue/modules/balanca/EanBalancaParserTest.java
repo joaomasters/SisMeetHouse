@@ -9,26 +9,17 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.*;
 
-/**
- * Testes unitários do parser de EAN-13 de balança.
- *
- * EANs usados nos testes (dígito verificador calculado manualmente pelo
- * algoritmo GS1):
- *   2100000125005 → PLU=10000  valor=R$12,50  (VALOR_TOTAL)
- *   2200000150004 → PLU=20000  peso=1500g=1,5kg  (PESO_GRAMAS)
- *   1234567890128 → EAN padrão (não começa com '2')
- */
 @DisplayName("EanBalancaParser")
 class EanBalancaParserTest {
 
     private final EanBalancaParser parser = new EanBalancaParser();
 
-    // ── Formato VALOR_TOTAL ───────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("VALOR_TOTAL: valor e peso calculados corretamente")
     void formatoValorTotal_retornaValorEPeso() {
-        // PLU=10000, valor=01250 → R$12,50 | preço/kg=R$25,00 → peso=0,500 kg
+        
         EanParseResult result = parser.parse("2100000125005", new BigDecimal("25.00"));
 
         assertThat(result.getCodigoBalanca()).isEqualTo(10000);
@@ -61,12 +52,12 @@ class EanBalancaParserTest {
         ).isInstanceOf(InvalidBarcodeException.class);
     }
 
-    // ── Formato PESO_GRAMAS ───────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("PESO_GRAMAS: peso e valor calculados corretamente")
     void formatoPesoGramas_retornaPesoEValor() {
-        // PLU=20000, peso=01500g=1,500 kg | preço/kg=R$30,00 → valor=R$45,00
+        
         EanParseResult result = parser.parse("2200000150004", new BigDecimal("30.00"),
                 EanBalancaParser.FormatoEtiqueta.PESO_GRAMAS);
 
@@ -93,7 +84,7 @@ class EanBalancaParserTest {
         assertThat(result.getFormato()).isEqualTo(EanBalancaParser.FormatoEtiqueta.PESO_GRAMAS);
     }
 
-    // ── Validações de formato ─────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("Lança exceção para EAN com menos de 13 dígitos")
@@ -128,7 +119,7 @@ class EanBalancaParserTest {
     @Test
     @DisplayName("Lança exceção para dígito verificador incorreto")
     void lancaExcecao_digitoVerificadorIncorreto() {
-        // EAN correto seria 2100000125005, aqui mudamos o último para 9
+        
         assertThatThrownBy(() -> parser.parse("2100000125009", BigDecimal.TEN))
                 .isInstanceOf(InvalidBarcodeException.class)
                 .hasMessageContaining("Dígito verificador");
@@ -137,19 +128,19 @@ class EanBalancaParserTest {
     @Test
     @DisplayName("Lança exceção para EAN que não começa com '2'")
     void lancaExcecao_eanNaoComecaCom2() {
-        // EAN padrão válido (não-balança): 1234567890128
+        
         assertThatThrownBy(() ->
             parser.parse("1234567890128", BigDecimal.TEN, EanBalancaParser.FormatoEtiqueta.VALOR_TOTAL)
         ).isInstanceOf(InvalidBarcodeException.class)
          .hasMessageContaining("não é de balança");
     }
 
-    // ── Formato forçado ───────────────────────────────────────────────────────
+    
 
     @Test
     @DisplayName("Formato forçado PESO_GRAMAS prevalece sobre presença de precoKg")
     void formatoForcado_pesoGramas_prevaleceSobrePrecoKg() {
-        // Mesmo com precoKg informado, PESO_GRAMAS é forçado
+        
         EanParseResult result = parser.parse("2200000150004", new BigDecimal("30.00"),
                 EanBalancaParser.FormatoEtiqueta.PESO_GRAMAS);
         assertThat(result.getFormato()).isEqualTo(EanBalancaParser.FormatoEtiqueta.PESO_GRAMAS);

@@ -20,7 +20,7 @@ public class SangriaCaixa {
     private Caixa caixa;
 
     @Column(nullable = false, length = 20)
-    private String tipo; // SANGRIA, SUPRIMENTO
+    private String tipo; 
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal valor;

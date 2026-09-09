@@ -18,7 +18,7 @@ public class PdvController {
 
     private final PdvService pdvService;
 
-    // ── Caixa ─────────────────────────────────────────────────
+    
 
     @PostMapping("/caixa/abrir")
     public ResponseEntity<Caixa> abrirCaixa(
@@ -34,7 +34,7 @@ public class PdvController {
         return ResponseEntity.ok(pdvService.fecharCaixa(id, valorInformado));
     }
 
-    // ── Venda ─────────────────────────────────────────────────
+    
 
     @PostMapping("/vendas/abrir")
     public ResponseEntity<Venda> abrirVenda(@RequestBody @Valid AbrirVendaDTO dto) {

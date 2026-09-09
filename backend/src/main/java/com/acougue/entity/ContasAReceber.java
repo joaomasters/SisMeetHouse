@@ -50,7 +50,7 @@ public class ContasAReceber {
     private LocalDate dataPagamento;
 
     @Builder.Default
-    private String status = "ABERTO"; // ABERTO, PARCIAL, PAGO, CANCELADO
+    private String status = "ABERTO"; 
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

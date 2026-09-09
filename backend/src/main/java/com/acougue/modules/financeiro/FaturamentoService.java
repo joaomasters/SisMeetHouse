@@ -24,11 +24,8 @@ public class FaturamentoService {
     private final VendaRepository              vendaRepo;
     private final ClienteRepository            clienteRepo;
 
-    /**
-     * Gera o fechamento de faturamento de um cliente para um período.
-     * Agrega todas as vendas FIADO/FATURAMENTO do período e cria
-     * a conta a receber consolidada.
-     */
+    
+
     @Transactional
     public FaturamentoCliente gerarFechamento(Long clienteId, LocalDate inicio, LocalDate fim) {
         Cliente cliente = clienteRepo.findById(clienteId)
@@ -57,7 +54,7 @@ public class FaturamentoService {
 
         fat = faturamentoRepo.save(fat);
 
-        // Cria conta a receber consolidada
+        
         ContasAReceber conta = ContasAReceber.builder()
                 .cliente(cliente)
                 .faturamento(fat)
@@ -91,7 +88,7 @@ public class FaturamentoService {
             conta.setStatus("PARCIAL");
         }
 
-        // Atualizar faturamento vinculado
+        
         if (conta.getFaturamento() != null) {
             FaturamentoCliente fat = conta.getFaturamento();
             fat.setTotalPago(fat.getTotalPago().add(valorPago));
