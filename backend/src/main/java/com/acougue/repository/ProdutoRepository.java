@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,4 +30,10 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     List<Produto> findEstoqueAbaixoMinimo();
 
     List<Produto> findAllByAtivoTrue();
+
+    @Query("SELECT p FROM Produto p WHERE p.codigoBalanca IS NOT NULL AND p.ativo = true AND p.updatedAt > :desde")
+    List<Produto> findBalancaAtualizadosDesde(@Param("desde") LocalDateTime desde);
+
+    @Query("SELECT COUNT(p) FROM Produto p WHERE p.codigoBalanca IS NOT NULL AND p.ativo = true AND p.updatedAt > :desde")
+    long countBalancaAtualizadosDesde(@Param("desde") LocalDateTime desde);
 }

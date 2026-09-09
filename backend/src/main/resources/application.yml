@@ -68,3 +68,10 @@ pagamento:
     mp-access-token: ${MP_ACCESS_TOKEN:}
   stone:
     agent-url: ${STONE_AGENT_URL:http://localhost:12345}
+
+balanca:
+  scheduler:
+    cron:  ${BALANCA_CRON:0 0 7 * * *}
+    tipo:  ${BALANCA_TIPO:TOLEDO_MGV7}
+    ip:    ${BALANCA_IP:}
+    porta: ${BALANCA_PORTA:8000}
