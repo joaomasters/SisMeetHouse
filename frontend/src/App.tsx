@@ -17,6 +17,9 @@ import CargaBalancaPage from './modules/balanca/CargaBalancaPage'
 import RecebimentoPage from './modules/estoque/RecebimentoPage'
 import FichasDesossaPage from './modules/estoque/FichasDesossaPage'
 import NotaFiscalPage from './modules/fiscal/NotaFiscalPage'
+import UsuariosPage from './modules/acesso/UsuariosPage'
+import PerfisPage from './modules/acesso/PerfisPage'
+import HomePage from './modules/home/HomePage'
 
 export default function App() {
   return (
@@ -33,7 +36,8 @@ export default function App() {
         {/* Back-office: autenticado + Layout com sidebar */}
         <Route element={<PrivateRoute />}>
           <Route element={<Layout />}>
-            <Route index element={<Navigate to="/estoque/produtos" replace />} />
+            <Route index element={<HomePage />} />
+            <Route path="/inicio" element={<HomePage />} />
             <Route path="/pdv/sangria"               element={<SangriaPage />} />
             <Route path="/estoque/produtos"          element={<ProdutosPage />} />
             <Route path="/estoque/desossa"           element={<DesossaPage />} />
@@ -48,11 +52,13 @@ export default function App() {
             <Route path="/financeiro/dre"            element={<DrePage />} />
             <Route path="/financeiro/relatorios"     element={<RelatoriosPage />} />
             <Route path="/balanca"                   element={<CargaBalancaPage />} />
+            <Route path="/acesso/usuarios"           element={<UsuariosPage />} />
+            <Route path="/acesso/perfis"             element={<PerfisPage />} />
           </Route>
         </Route>
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/estoque/produtos" replace />} />
+        <Route path="*" element={<Navigate to="/inicio" replace />} />
       </Routes>
     </BrowserRouter>
   )

@@ -3,44 +3,62 @@ import {
   ShoppingCart, Package, Scissors, DollarSign,
   CreditCard, BarChart2, Scale, AlertTriangle,
   ClipboardList, TrendingDown, ArrowDownCircle, BarChart, LogOut,
-  Truck, FileText
+  Truck, FileText, Users, ShieldCheck, Home
 } from 'lucide-react'
 import clsx from 'clsx'
-import { removeToken } from '../auth'
+import { removeSessao } from '../auth'
+import { usePermissao } from '../hooks/usePermissao'
 
 const nav = [
-  { label: 'PDV / Caixa',          href: '/pdv',              icon: ShoppingCart,   external: true },
-  { label: 'Sangria / Suprimento', href: '/pdv/sangria',      icon: ArrowDownCircle },
+  { label: 'Início', href: '/inicio', icon: Home, sempreVisivel: true },
+  { label: 'PDV / Caixa',          href: '/pdv',              icon: ShoppingCart,   external: true, modulo: 'PDV' },
+  { label: 'Sangria / Suprimento', href: '/pdv/sangria',      icon: ArrowDownCircle, modulo: 'SANGRIA' },
 
   { separator: 'Estoque' },
-  { label: 'Produtos',     href: '/estoque/produtos',     icon: Package },
-  { label: 'Recebimento',       href: '/estoque/recebimento',       icon: Truck },
-  { label: 'Fichas Desossa',    href: '/estoque/fichas-desossa',    icon: ClipboardList },
-  { label: 'Rateio de Desossa',           href: '/estoque/desossa',           icon: Scissors },
-  { label: 'Inventário',   href: '/estoque/inventario',   icon: ClipboardList },
-  { label: 'Perdas',       href: '/estoque/perdas',       icon: AlertTriangle },
+  { label: 'Produtos',          href: '/estoque/produtos',       icon: Package,        modulo: 'PRODUTOS' },
+  { label: 'Recebimento',       href: '/estoque/recebimento',    icon: Truck,          modulo: 'RECEBIMENTO' },
+  { label: 'Fichas Desossa',    href: '/estoque/fichas-desossa', icon: ClipboardList,  modulo: 'FICHAS_DESOSSA' },
+  { label: 'Rateio de Desossa', href: '/estoque/desossa',        icon: Scissors,       modulo: 'RATEIO_DESOSSA' },
+  { label: 'Inventário',        href: '/estoque/inventario',     icon: ClipboardList,  modulo: 'INVENTARIO' },
+  { label: 'Perdas',            href: '/estoque/perdas',         icon: AlertTriangle,  modulo: 'PERDAS' },
 
   { separator: 'Fiscal' },
-  { label: 'NF de Saída', href: '/fiscal/notas', icon: FileText },
+  { label: 'NF de Saída', href: '/fiscal/notas', icon: FileText, modulo: 'NF_SAIDA' },
 
   { separator: 'Financeiro' },
-  { label: 'Faturamento',      href: '/financeiro/faturamento',    icon: DollarSign },
-  { label: 'Contas a Receber', href: '/financeiro/contas-receber', icon: CreditCard },
-  { label: 'Contas a Pagar',   href: '/financeiro/contas-pagar',   icon: TrendingDown },
-  { label: 'DRE',              href: '/financeiro/dre',            icon: BarChart2 },
-  { label: 'Relatórios',       href: '/financeiro/relatorios',     icon: BarChart },
+  { label: 'Faturamento',      href: '/financeiro/faturamento',    icon: DollarSign,  modulo: 'FATURAMENTO' },
+  { label: 'Contas a Receber', href: '/financeiro/contas-receber', icon: CreditCard,  modulo: 'CONTAS_RECEBER' },
+  { label: 'Contas a Pagar',   href: '/financeiro/contas-pagar',   icon: TrendingDown, modulo: 'CONTAS_PAGAR' },
+  { label: 'DRE',              href: '/financeiro/dre',            icon: BarChart2,   modulo: 'DRE' },
+  { label: 'Relatórios',       href: '/financeiro/relatorios',     icon: BarChart,    modulo: 'RELATORIOS' },
 
   { separator: 'Balança' },
-  { label: 'Carga Balança', href: '/balanca', icon: Scale },
+  { label: 'Carga Balança', href: '/balanca', icon: Scale, modulo: 'CARGA_BALANCA' },
+
+  { separator: 'Administração' },
+  { label: 'Usuários', href: '/acesso/usuarios', icon: Users,       modulo: 'USUARIOS' },
+  { label: 'Perfis',   href: '/acesso/perfis',   icon: ShieldCheck, modulo: 'PERFIS' },
 ]
 
 export default function Sidebar() {
   const navigate = useNavigate()
+  const { podeVer, isSuperAdmin } = usePermissao()
 
   const logout = () => {
-    removeToken()
+    removeSessao()
     navigate('/login')
   }
+
+  // Filtra os itens pelo que o perfil pode VER, e depois remove separadores
+  // que ficaram sem nenhum item visível embaixo (evita título "solto").
+  const itensVisiveis = nav.filter(item =>
+    'separator' in item || item.sempreVisivel || isSuperAdmin || podeVer(item.modulo!)
+  )
+  const navFiltrado = itensVisiveis.filter((item, i) => {
+    if (!('separator' in item)) return true
+    const proximo = itensVisiveis[i + 1]
+    return proximo && !('separator' in proximo)
+  })
 
   return (
     <aside className="w-60 bg-gray-900 text-white flex flex-col min-h-screen">
@@ -50,7 +68,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {nav.map((item, i) => {
+        {navFiltrado.map((item, i) => {
           if ('separator' in item) {
             return (
               <p key={i} className="px-2 pt-4 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-widest">
