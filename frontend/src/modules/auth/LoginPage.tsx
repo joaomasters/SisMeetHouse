@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import { setToken } from '../../shared/auth'
+import { setSessao } from '../../shared/auth'
 import { Lock, User } from 'lucide-react'
 
 export default function LoginPage() {
@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError('')
     try {
       const res = await axios.post('/api/auth/login', { username, password })
-      setToken(res.data.token)
+      setSessao(res.data)
       navigate('/estoque/produtos')
     } catch {
       setError('Usuário ou senha incorretos')

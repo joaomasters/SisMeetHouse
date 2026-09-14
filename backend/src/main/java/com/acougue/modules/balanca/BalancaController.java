@@ -1,10 +1,13 @@
 package com.acougue.modules.balanca;
 
 import com.acougue.entity.CargaBalanca;
+import com.acougue.entity.Modulo;
 import com.acougue.entity.Produto;
 import com.acougue.modules.balanca.dto.EanParseResult;
 import com.acougue.modules.estoque.ProdutoService;
 import com.acougue.repository.CargaBalancaRepository;
+import com.acougue.security.Acao;
+import com.acougue.security.ExigirPermissao;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -25,6 +28,7 @@ public class BalancaController {
     private final ProdutoService          produtoService;
     private final CargaBalancaRepository  cargaRepo;
 
+    @ExigirPermissao(modulo = Modulo.CARGA_BALANCA, acao = Acao.VER)
     @GetMapping("/parse/{ean13}")
     public ResponseEntity<EanParseResult> parsearEan(
             @PathVariable String ean13,
@@ -32,6 +36,7 @@ public class BalancaController {
         return ResponseEntity.ok(eanParser.parse(ean13, precoKg));
     }
 
+    @ExigirPermissao(modulo = Modulo.CARGA_BALANCA, acao = Acao.CRIAR)
     @GetMapping("/carga/toledo-mgv7")
     public ResponseEntity<byte[]> downloadToledoMGV7() {
         List<Produto> produtos = produtoService.listarParaBalanca();
@@ -47,6 +52,7 @@ public class BalancaController {
         return ResponseEntity.ok().headers(headers).body(bytes);
     }
 
+    @ExigirPermissao(modulo = Modulo.CARGA_BALANCA, acao = Acao.CRIAR)
     @GetMapping("/carga/filizola-smart")
     public ResponseEntity<byte[]> downloadFilizolaSmart() {
         List<Produto> produtos = produtoService.listarParaBalanca();
@@ -62,6 +68,7 @@ public class BalancaController {
         return ResponseEntity.ok().headers(headers).body(bytes);
     }
 
+    @ExigirPermissao(modulo = Modulo.CARGA_BALANCA, acao = Acao.VER)
     @GetMapping("/carga/preview/{tipo}")
     public ResponseEntity<String> previewCarga(@PathVariable String tipo) {
         List<Produto> produtos = produtoService.listarParaBalanca();
