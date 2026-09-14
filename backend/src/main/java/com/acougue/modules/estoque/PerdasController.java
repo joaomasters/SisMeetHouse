@@ -1,14 +1,16 @@
 package com.acougue.modules.estoque;
 
+import com.acougue.entity.Modulo;
 import com.acougue.entity.PerdasEstoque;
 import com.acougue.modules.estoque.dto.LancarPerdaDTO;
+import com.acougue.security.Acao;
+import com.acougue.security.ExigirPermissao;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -19,11 +21,13 @@ public class PerdasController {
 
     private final PerdasService perdasService;
 
+    @ExigirPermissao(modulo = Modulo.PERDAS, acao = Acao.CRIAR)
     @PostMapping
     public ResponseEntity<PerdasEstoque> lancar(@RequestBody LancarPerdaDTO dto) {
         return ResponseEntity.ok(perdasService.lancarPerda(dto));
     }
 
+    @ExigirPermissao(modulo = Modulo.PERDAS, acao = Acao.VER)
     @GetMapping
     public ResponseEntity<List<PerdasEstoque>> listar(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
@@ -32,6 +36,7 @@ public class PerdasController {
                 inicio.atStartOfDay(), fim.atTime(LocalTime.MAX)));
     }
 
+    @ExigirPermissao(modulo = Modulo.PERDAS, acao = Acao.VER)
     @GetMapping("/produto/{produtoId}")
     public ResponseEntity<List<PerdasEstoque>> listarPorProduto(@PathVariable Long produtoId) {
         return ResponseEntity.ok(perdasService.listarPorProduto(produtoId));
