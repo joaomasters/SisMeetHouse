@@ -4,6 +4,7 @@ import com.acougue.entity.Cliente;
 import com.acougue.entity.NotaFiscalSaida;
 import com.acougue.entity.NotaFiscalSaidaItem;
 import com.acougue.entity.Produto;
+import com.acougue.modules.estoque.EstoqueService;
 import com.acougue.modules.fiscal.dto.NotaFiscalSaidaDTO;
 import com.acougue.repository.ClienteRepository;
 import com.acougue.repository.NotaFiscalSaidaRepository;
@@ -24,6 +25,7 @@ public class NotaFiscalService {
     private final NotaFiscalSaidaRepository notaRepo;
     private final ClienteRepository         clienteRepo;
     private final ProdutoRepository         produtoRepo;
+    private final EstoqueService            estoqueService;
 
     public List<NotaFiscalSaida> listar() {
         return notaRepo.findAllByOrderByCreatedAtDesc();
@@ -38,7 +40,7 @@ public class NotaFiscalService {
     public NotaFiscalSaida criar(NotaFiscalSaidaDTO dto) {
         Cliente cliente = dto.clienteId() != null
                 ? clienteRepo.findById(dto.clienteId())
-                        .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + dto.clienteId()))
+                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + dto.clienteId()))
                 : null;
 
         NotaFiscalSaida nf = NotaFiscalSaida.builder()
@@ -87,6 +89,7 @@ public class NotaFiscalService {
     @Transactional
     public NotaFiscalSaida atualizarStatus(Long id, String status) {
         NotaFiscalSaida nf = buscar(id);
+        aplicarTransicaoDeEstoque(nf, status);
         nf.setStatus(status);
         return notaRepo.save(nf);
     }
@@ -95,7 +98,39 @@ public class NotaFiscalService {
     public NotaFiscalSaida uploadXml(Long id, String xml) {
         NotaFiscalSaida nf = buscar(id);
         nf.setXmlNf(xml);
-        if ("PENDENTE".equals(nf.getStatus())) nf.setStatus("EMITIDA");
+        if ("PENDENTE".equals(nf.getStatus())) {
+            aplicarTransicaoDeEstoque(nf, "EMITIDA");
+            nf.setStatus("EMITIDA");
+        }
         return notaRepo.save(nf);
+    }
+
+    /*
+     Movimenta o estoque conforme a mudança de status da NF de saída:
+     vira EMITIDA (e não estava antes) → baixa o estoque de cada item vinculado a um produto
+     estava EMITIDA e vira CANCELADA → devolve a quantidade ao estoque, SEM alterar o
+     custo médio (a mercadoria nunca foi "comprada" de novo, só voltou pra prateleira)
+     Itens sem produto vinculado (texto livre na nota) são ignorados — não há estoque a controlar.
+     */
+    private void aplicarTransicaoDeEstoque(NotaFiscalSaida nf, String novoStatus) {
+        String statusAnterior = nf.getStatus();
+        if (statusAnterior.equals(novoStatus)) return;
+
+        boolean vaiEmitir   = "EMITIDA".equals(novoStatus) && !"EMITIDA".equals(statusAnterior);
+        boolean vaiCancelar = "CANCELADA".equals(novoStatus) && "EMITIDA".equals(statusAnterior);
+
+        if (vaiEmitir) {
+            for (NotaFiscalSaidaItem item : nf.getItens()) {
+                if (item.getProduto() == null) continue;
+                estoqueService.saida(item.getProduto(), item.getQuantidade(),
+                        "SAIDA_NF", "NF#" + nf.getId(), null);
+            }
+        } else if (vaiCancelar) {
+            for (NotaFiscalSaidaItem item : nf.getItens()) {
+                if (item.getProduto() == null) continue;
+                estoqueService.entrada(item.getProduto(), item.getQuantidade(), null,
+                        "ENTRADA_ESTORNO_NF", "NF#" + nf.getId(), null);
+            }
+        }
     }
 }
