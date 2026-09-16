@@ -22,12 +22,29 @@ api.interceptors.response.use(
       window.location.href = '/login'
       return Promise.reject(error)
     }
-    const msg =
-      error.response?.data?.message ??
-      error.response?.data ??
-      error.message ??
-      'Erro desconhecido'
-    toast.error(String(msg))
+    const data = error.response?.data
+    let msg = 'Erro desconhecido'
+    if (typeof data === 'string' && data.trim()) {
+      msg = data
+    } else if (data && typeof data === 'object') {
+      const d = data as Record<string, unknown>
+      if (typeof d.message === 'string' && d.message.trim()) {
+        msg = d.message
+      } else if (typeof d.detail === 'string' && d.detail.trim()) {
+        msg = d.detail
+      } else if (typeof d.error === 'string' && d.error.trim()) {
+        msg = d.error
+      } else if (Array.isArray(d.errors) && d.errors.length > 0) {
+        const first = d.errors[0] as Record<string, unknown>
+        msg = String(first.defaultMessage ?? first.message ?? 'Erro de validação')
+      } else if (Array.isArray(d.fieldErrors) && d.fieldErrors.length > 0) {
+        const first = d.fieldErrors[0] as Record<string, unknown>
+        msg = String(first.defaultMessage ?? first.message ?? 'Campo inválido')
+      }
+    } else if (error.message) {
+      msg = error.message
+    }
+    toast.error(msg)
     return Promise.reject(error)
   }
 )

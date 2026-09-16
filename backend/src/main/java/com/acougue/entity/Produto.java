@@ -21,7 +21,6 @@ public class Produto {
     private Long id;
 
     @Column(name = "codigo_interno", unique = true, nullable = false, length = 20)
-    @NotBlank
     private String codigoInterno;
 
     @Column(name = "codigo_balanca")
