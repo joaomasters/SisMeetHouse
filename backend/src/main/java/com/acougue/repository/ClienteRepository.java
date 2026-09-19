@@ -16,6 +16,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     List<Cliente> findByTipoClienteAndAtivoTrue(String tipoCliente);
 
+    List<Cliente> findByAtivoTrueAndTipoClienteNot(String tipoCliente);
+
     Optional<Cliente> findByCpfCnpj(String cpfCnpj);
 
     @Query("SELECT c FROM Cliente c WHERE LOWER(c.nome) LIKE LOWER(CONCAT('%', :nome, '%')) AND c.ativo = true")

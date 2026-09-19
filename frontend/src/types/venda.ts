@@ -7,8 +7,10 @@ export interface Cliente {
   tipoPessoa: 'PF' | 'PJ'
   telefone?: string
   email?: string
+  endereco?: string
   tipoCliente: 'VAREJO' | 'ATACADO' | 'RESTAURANTE' | 'CONVENIADO'
   limiteCredito: number
+  saldoFiadoAtual?: number
   ativo: boolean
 }
 

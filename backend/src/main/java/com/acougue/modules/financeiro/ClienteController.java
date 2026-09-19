@@ -29,6 +29,12 @@ public class ClienteController {
     }
 
     @ExigirPermissao(modulo = Modulo.CLIENTES, acao = Acao.VER)
+    @GetMapping("/faturaveis")
+    public ResponseEntity<List<Cliente>> listarFaturaveis() {
+        return ResponseEntity.ok(clienteService.listarFaturaveis());
+    }
+
+    @ExigirPermissao(modulo = Modulo.CLIENTES, acao = Acao.VER)
     @GetMapping("/{id}")
     public ResponseEntity<Cliente> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(clienteService.buscarPorId(id));
@@ -38,5 +44,25 @@ public class ClienteController {
     @PostMapping
     public ResponseEntity<Cliente> criar(@RequestBody @Valid Cliente cliente) {
         return ResponseEntity.ok(clienteService.criar(cliente));
+    }
+
+    @ExigirPermissao(modulo = Modulo.CLIENTES, acao = Acao.EDITAR)
+    @PutMapping("/{id}")
+    public ResponseEntity<Cliente> atualizar(@PathVariable Long id, @RequestBody @Valid Cliente cliente) {
+        return ResponseEntity.ok(clienteService.atualizar(id, cliente));
+    }
+
+    @ExigirPermissao(modulo = Modulo.CLIENTES, acao = Acao.EXCLUIR)
+    @PostMapping("/{id}/inativar")
+    public ResponseEntity<Void> inativar(@PathVariable Long id) {
+        clienteService.inativar(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @ExigirPermissao(modulo = Modulo.CLIENTES, acao = Acao.EDITAR)
+    @PostMapping("/{id}/reativar")
+    public ResponseEntity<Void> reativar(@PathVariable Long id) {
+        clienteService.reativar(id);
+        return ResponseEntity.ok().build();
     }
 }

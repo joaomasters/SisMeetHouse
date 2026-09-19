@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Scissors, ChevronRight, Link2, History, AlertTriangle } from 'lucide-react'
+import { Scissors, ChevronRight, Link2, History, AlertTriangle, Filter } from 'lucide-react'
 import { api } from '@/shared/api/axios'
 import toast from 'react-hot-toast'
 import type { FichaDesossa, ExecutarDesossaDTO, ProcessoDesossa } from '@/types/produto'
@@ -25,6 +25,11 @@ export default function DesossaPage() {
   const [preenchidoPelaNf, setPreenchidoPelaNf] = useState(false)
   const [confirmouPerdaAnormal, setConfirmouPerdaAnormal] = useState(false)
 
+  // Filtro de período do histórico — sem período escolhido, o histórico
+  // não é carregado nem exibido (evita listar todas as execuções de uma vez).
+  const [historicoInicio, setHistoricoInicio] = useState('')
+  const [historicoFim, setHistoricoFim]       = useState('')
+
   const { data: saldoNf } = useQuery<number>({
     queryKey: ['saldo-nf', recebimentoId, fichaSel?.produtoPai.id],
     queryFn: () => api.get('/estoque/desossa/saldo-nf', {
@@ -44,9 +49,11 @@ export default function DesossaPage() {
   })
 
   const { data: historico = [] } = useQuery<ProcessoDesossa[]>({
-    queryKey: ['desossa-historico', fichaSel?.id],
-    queryFn: () => api.get(`/estoque/desossa/historico/${fichaSel!.id}`).then(r => r.data),
-    enabled: !!fichaSel,
+    queryKey: ['desossa-historico', fichaSel?.id, historicoInicio, historicoFim],
+    queryFn: () => api.get(`/estoque/desossa/historico/${fichaSel!.id}`, {
+      params: { inicio: historicoInicio, fim: historicoFim },
+    }).then(r => r.data),
+    enabled: !!fichaSel && !!historicoInicio && !!historicoFim,
   })
 
   const executar = useMutation({
@@ -148,47 +155,67 @@ export default function DesossaPage() {
             )}
           </div>
 
-          {/* Histórico de execuções, com destaque para perdas anormais */}
+          {/* Histórico de execuções — agora escondido por padrão; só aparece
+              depois que o usuário escolhe um período, com destaque para perdas anormais */}
           {fichaSel && (
             <div className="mt-6">
               <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
                 <History size={14} /> Histórico de Execuções
               </h2>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {historico.map(p => {
-                  const anormal = !!p.observacao
-                  return (
-                    <div
-                      key={p.id}
-                      className={`rounded-lg border px-3 py-2 text-sm ${
-                        anormal ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-800">
-                          {new Date(p.dataProcesso).toLocaleDateString('pt-BR')} — {kg3(p.quantidadeEntrada)} kg
-                        </span>
-                        {anormal && (
-                          <span className="flex items-center gap-1 text-orange-700 text-xs font-semibold">
-                            <AlertTriangle size={12} /> Perda anormal
+
+              <div className="flex items-end gap-2 mb-3">
+                <Filter size={14} className="text-gray-400 mb-2" />
+                <div>
+                  <label className="text-[11px] text-gray-500 block mb-1">De</label>
+                  <input type="date" value={historicoInicio} onChange={e => setHistoricoInicio(e.target.value)}
+                    className="border rounded-lg px-2 py-1 text-xs" />
+                </div>
+                <div>
+                  <label className="text-[11px] text-gray-500 block mb-1">Até</label>
+                  <input type="date" value={historicoFim} onChange={e => setHistoricoFim(e.target.value)}
+                    className="border rounded-lg px-2 py-1 text-xs" />
+                </div>
+              </div>
+
+              {!historicoInicio || !historicoFim ? (
+                <p className="text-gray-400 text-sm">Escolha um período para ver as execuções anteriores.</p>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {historico.map(p => {
+                    const anormal = !!p.observacao
+                    return (
+                      <div
+                        key={p.id}
+                        className={`rounded-lg border px-3 py-2 text-sm ${
+                          anormal ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-gray-800">
+                            {new Date(p.dataProcesso).toLocaleDateString('pt-BR')} — {kg3(p.quantidadeEntrada)} kg
                           </span>
+                          {anormal && (
+                            <span className="flex items-center gap-1 text-orange-700 text-xs font-semibold">
+                              <AlertTriangle size={12} /> Perda anormal
+                            </span>
+                          )}
+                        </div>
+                        {p.recebimento && (
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            NF {p.recebimento.numeroNf ?? 'S/N'} — {p.recebimento.fornecedor}
+                          </p>
+                        )}
+                        {anormal && (
+                          <p className="text-xs text-orange-700 mt-1">{p.observacao}</p>
                         )}
                       </div>
-                      {p.recebimento && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          NF {p.recebimento.numeroNf ?? 'S/N'} — {p.recebimento.fornecedor}
-                        </p>
-                      )}
-                      {anormal && (
-                        <p className="text-xs text-orange-700 mt-1">{p.observacao}</p>
-                      )}
-                    </div>
-                  )
-                })}
-                {historico.length === 0 && (
-                  <p className="text-gray-400 text-sm">Nenhuma execução registrada ainda.</p>
-                )}
-              </div>
+                    )
+                  })}
+                  {historico.length === 0 && (
+                    <p className="text-gray-400 text-sm">Nenhuma execução nesse período.</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -25,6 +26,11 @@ public class RecebimentoService {
 
     public List<RecebimentoMercadoria> listar() {
         return recebimentoRepo.findAllByOrderByCreatedAtDesc();
+    }
+
+    /** Listagem filtrada por período de entrada e, opcionalmente, fornecedor (busca parcial). */
+    public List<RecebimentoMercadoria> listar(LocalDateTime inicio, LocalDateTime fim, String fornecedor) {
+        return recebimentoRepo.buscarComFiltros(inicio, fim, fornecedor == null ? "" : fornecedor.trim());
     }
 
     public RecebimentoMercadoria buscar(Long id) {

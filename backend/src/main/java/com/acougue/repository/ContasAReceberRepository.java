@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ContasAReceberRepository extends JpaRepository<ContasAReceber, Long> {
@@ -17,9 +18,11 @@ public interface ContasAReceberRepository extends JpaRepository<ContasAReceber, 
 
     List<ContasAReceber> findByClienteId(Long clienteId);
 
+    Optional<ContasAReceber> findByFaturamentoId(Long faturamentoId);
+
     List<ContasAReceber> findByDataVencimentoBeforeAndStatusIn(LocalDate data, List<String> statuses);
 
     @Query("SELECT COALESCE(SUM(c.valor - c.valorPago), 0) FROM ContasAReceber c " +
-           "WHERE c.cliente.id = :clienteId AND c.status IN ('ABERTO', 'PARCIAL')")
+            "WHERE c.cliente.id = :clienteId AND c.status IN ('ABERTO', 'PARCIAL')")
     BigDecimal saldoAberto(@Param("clienteId") Long clienteId);
 }

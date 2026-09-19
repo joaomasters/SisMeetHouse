@@ -24,17 +24,30 @@ public class FaturamentoService {
     private final VendaRepository              vendaRepo;
     private final ClienteRepository            clienteRepo;
 
-    
+
 
     @Transactional
     public FaturamentoCliente gerarFechamento(Long clienteId, LocalDate inicio, LocalDate fim) {
         Cliente cliente = clienteRepo.findById(clienteId)
                 .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado: " + clienteId));
 
+        List<FaturamentoCliente> sobrepostos = faturamentoRepo.buscarSobrepostos(clienteId, inicio, fim);
+        if (!sobrepostos.isEmpty()) {
+            FaturamentoCliente existente = sobrepostos.get(0);
+            throw new BusinessException(String.format(
+                    "Já existe um fechamento em aberto para esse cliente cobrindo parte desse período " +
+                            "(fechamento #%d, %s a %s). Gerar outro cobraria as mesmas vendas duas vezes.",
+                    existente.getId(), existente.getPeriodoInicio(), existente.getPeriodoFim()));
+        }
+
         LocalDateTime dtInicio = inicio.atStartOfDay();
         LocalDateTime dtFim    = fim.atTime(LocalTime.MAX);
 
         List<Venda> vendas = vendaRepo.findVendasFaturamentoCliente(clienteId, dtInicio, dtFim);
+
+        if (vendas.isEmpty()) {
+            throw new BusinessException("Nenhuma venda encontrada para esse cliente no período informado — nada a faturar.");
+        }
 
         BigDecimal total = vendas.stream()
                 .map(Venda::getTotal)
@@ -54,7 +67,7 @@ public class FaturamentoService {
 
         fat = faturamentoRepo.save(fat);
 
-        
+
         ContasAReceber conta = ContasAReceber.builder()
                 .cliente(cliente)
                 .faturamento(fat)
@@ -67,6 +80,19 @@ public class FaturamentoService {
         contasRepo.save(conta);
 
         return fat;
+    }
+
+    /**
+     * Registra pagamento a partir do ID do fechamento (FaturamentoCliente),
+     * usado pela tela de Faturamento — evita a UI ter que conhecer o ID
+     * interno da ContasAReceber gerada junto com o fechamento.
+     */
+    @Transactional
+    public ContasAReceber registrarPagamentoPorFaturamento(Long faturamentoId, BigDecimal valorPago) {
+        ContasAReceber conta = contasRepo.findByFaturamentoId(faturamentoId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Conta a receber não encontrada para o fechamento: " + faturamentoId));
+        return registrarPagamento(conta.getId(), valorPago);
     }
 
     @Transactional
@@ -88,7 +114,7 @@ public class FaturamentoService {
             conta.setStatus("PARCIAL");
         }
 
-        
+
         if (conta.getFaturamento() != null) {
             FaturamentoCliente fat = conta.getFaturamento();
             fat.setTotalPago(fat.getTotalPago().add(valorPago));

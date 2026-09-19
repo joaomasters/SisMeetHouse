@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { DollarSign, Plus } from 'lucide-react'
+import { DollarSign, Plus, CheckCircle } from 'lucide-react'
 import { api } from '@/shared/api/axios'
 import toast from 'react-hot-toast'
 import type { FaturamentoCliente, Cliente } from '@/types/venda'
@@ -21,6 +21,10 @@ export default function FaturamentoPage() {
   const [inicio, setInicio]       = useState('')
   const [fim, setFim]             = useState('')
 
+  // Pagamento de um fechamento — antes só existia em Contas a Receber.
+  const [pagarFat, setPagarFat]   = useState<FaturamentoCliente | null>(null)
+  const [valorPag, setValorPag]   = useState('')
+
   const { data: faturamentos = [], isLoading } = useQuery<FaturamentoCliente[]>({
     queryKey: ['faturamentos'],
     queryFn: () => api.get('/financeiro/faturamento/abertos').then(r => r.data),
@@ -40,6 +44,17 @@ export default function FaturamentoPage() {
       toast.success('Faturamento gerado!')
       qc.invalidateQueries({ queryKey: ['faturamentos'] })
       setShowForm(false)
+    },
+  })
+
+  const pagar = useMutation({
+    mutationFn: ({ faturamentoId, valor }: { faturamentoId: number; valor: number }) =>
+      api.post(`/financeiro/faturamento/${faturamentoId}/pagar`, null, { params: { valor } }),
+    onSuccess: () => {
+      toast.success('Pagamento registrado!')
+      qc.invalidateQueries({ queryKey: ['faturamentos'] })
+      setPagarFat(null)
+      setValorPag('')
     },
   })
 
@@ -75,6 +90,7 @@ export default function FaturamentoPage() {
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Saldo</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Vencimento</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -93,6 +109,17 @@ export default function FaturamentoPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{f.dataVencimento}</td>
+                  <td className="px-4 py-3">
+                    {f.status !== 'QUITADO' && (
+                      <button
+                        onClick={() => setPagarFat(f)}
+                        title="Registrar pagamento"
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 font-medium"
+                      >
+                        <CheckCircle size={13} /> Receber
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -144,6 +171,40 @@ export default function FaturamentoPage() {
                 className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium disabled:opacity-60"
               >
                 {gerar.isPending ? 'Gerando...' : 'Gerar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal registrar pagamento */}
+      {pagarFat && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl p-6 space-y-4">
+            <h2 className="font-bold text-gray-900">Registrar Pagamento</h2>
+            <p className="text-sm text-gray-500">
+              {pagarFat.cliente.nome} — saldo devedor <strong className="text-red-600">{brl(pagarFat.saldoDevedor)}</strong>
+            </p>
+            <div>
+              <label className="text-xs font-medium text-gray-600 block mb-1">Valor Recebido (R$)</label>
+              <input
+                type="number" step="0.01"
+                value={valorPag}
+                onChange={e => setValorPag(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { setPagarFat(null); setValorPag('') }}
+                className="flex-1 py-2.5 border rounded-lg text-sm hover:bg-gray-50">
+                Cancelar
+              </button>
+              <button
+                onClick={() => pagar.mutate({ faturamentoId: pagarFat.id, valor: parseFloat(valorPag) })}
+                disabled={!valorPag || parseFloat(valorPag) <= 0 || pagar.isPending}
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium disabled:opacity-60"
+              >
+                {pagar.isPending ? 'Registrando...' : 'Confirmar'}
               </button>
             </div>
           </div>

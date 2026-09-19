@@ -7,10 +7,13 @@ import com.acougue.security.Acao;
 import com.acougue.security.ExigirPermissao;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +32,13 @@ public class InventarioController {
 
     @ExigirPermissao(modulo = Modulo.INVENTARIO, acao = Acao.VER)
     @GetMapping
-    public ResponseEntity<List<InventarioFisico>> listar() {
-        return ResponseEntity.ok(inventarioService.listarTodos());
+    public ResponseEntity<List<InventarioFisico>> listar(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        if (inicio == null || fim == null) {
+            return ResponseEntity.ok(inventarioService.listarTodos());
+        }
+        return ResponseEntity.ok(inventarioService.listarPorPeriodo(inicio.atStartOfDay(), fim.atTime(LocalTime.MAX)));
     }
 
     @ExigirPermissao(modulo = Modulo.INVENTARIO, acao = Acao.VER)

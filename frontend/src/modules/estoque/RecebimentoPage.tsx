@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Truck, Plus, FileText, X, ChevronDown, ChevronUp, Upload } from 'lucide-react'
+import { Truck, Plus, FileText, X, ChevronDown, ChevronUp, Upload, Filter } from 'lucide-react'
 import { api } from '@/shared/api/axios'
 import toast from 'react-hot-toast'
 
@@ -25,6 +25,9 @@ interface Recebimento {
 const brl = (v?: number) => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const parseNum = (s: string) => parseFloat(s.replace(',', '.')) || 0
 
+const hoje = new Date().toISOString().slice(0, 10)
+const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
 export default function RecebimentoPage() {
   const qc = useQueryClient()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -34,6 +37,12 @@ export default function RecebimentoPage() {
   const [expandId, setExpandId]       = useState<number | null>(null)
   const [xmlViewId, setXmlViewId]     = useState<number | null>(null)
   const [uploadId, setUploadId]       = useState<number | null>(null)
+
+  // Filtros da listagem — por padrão, últimos 30 dias, pra não carregar
+  // o histórico inteiro de recebimentos de uma vez.
+  const [filtroInicio, setFiltroInicio]         = useState(trintaDiasAtras)
+  const [filtroFim, setFiltroFim]               = useState(hoje)
+  const [filtroFornecedor, setFiltroFornecedor] = useState('')
 
   // Form state
   const [fornecedor, setFornecedor]   = useState('')
@@ -52,8 +61,10 @@ export default function RecebimentoPage() {
   })
 
   const { data: recebimentos = [], isLoading } = useQuery<Recebimento[]>({
-    queryKey: ['recebimentos'],
-    queryFn: () => api.get('/estoque/recebimentos').then(r => r.data),
+    queryKey: ['recebimentos', filtroInicio, filtroFim, filtroFornecedor],
+    queryFn: () => api.get('/estoque/recebimentos', {
+      params: { inicio: filtroInicio, fim: filtroFim, fornecedor: filtroFornecedor || undefined },
+    }).then(r => r.data),
   })
 
   const registrar = useMutation({
@@ -149,6 +160,35 @@ export default function RecebimentoPage() {
         </button>
       </div>
 
+      {/* Filtros */}
+      <div className="bg-white rounded-xl border p-4 mb-4 flex flex-wrap items-end gap-3">
+        <Filter size={16} className="text-gray-400 mb-2" />
+        <div>
+          <label className="text-xs font-medium text-gray-600 block mb-1">Entrada de</label>
+          <input type="date" value={filtroInicio} onChange={e => setFiltroInicio(e.target.value)}
+            className="border rounded-lg px-3 py-1.5 text-sm" />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-gray-600 block mb-1">até</label>
+          <input type="date" value={filtroFim} onChange={e => setFiltroFim(e.target.value)}
+            className="border rounded-lg px-3 py-1.5 text-sm" />
+        </div>
+        <div className="flex-1 min-w-[180px]">
+          <label className="text-xs font-medium text-gray-600 block mb-1">Fornecedor</label>
+          <input type="text" value={filtroFornecedor} onChange={e => setFiltroFornecedor(e.target.value)}
+            placeholder="Buscar por nome..."
+            className="w-full border rounded-lg px-3 py-1.5 text-sm" />
+        </div>
+        {(filtroFornecedor || filtroInicio !== trintaDiasAtras || filtroFim !== hoje) && (
+          <button
+            onClick={() => { setFiltroInicio(trintaDiasAtras); setFiltroFim(hoje); setFiltroFornecedor('') }}
+            className="text-xs text-red-600 hover:text-red-700 font-medium pb-2"
+          >
+            Limpar filtros
+          </button>
+        )}
+      </div>
+
       {/* Lista */}
       <div className="space-y-2">
         {isLoading && <p className="text-gray-400 text-sm">Carregando...</p>}
@@ -233,7 +273,7 @@ export default function RecebimentoPage() {
         ))}
         {!isLoading && recebimentos.length === 0 && (
           <div className="bg-white rounded-xl border p-10 text-center text-gray-400">
-            Nenhum recebimento registrado
+            Nenhum recebimento encontrado para os filtros selecionados
           </div>
         )}
       </div>
