@@ -50,14 +50,6 @@ public class FinanceiroController {
         return ResponseEntity.ok(faturamentoService.listarFaturamentosAbertos());
     }
 
-    @ExigirPermissao(modulo = Modulo.FATURAMENTO, acao = Acao.EDITAR)
-    @PostMapping("/faturamento/{faturamentoId}/pagar")
-    public ResponseEntity<ContasAReceber> registrarPagamentoFaturamento(
-            @PathVariable Long faturamentoId,
-            @RequestParam BigDecimal valor) {
-        return ResponseEntity.ok(faturamentoService.registrarPagamentoPorFaturamento(faturamentoId, valor));
-    }
-
     @ExigirPermissao(modulo = Modulo.CONTAS_RECEBER, acao = Acao.VER)
     @GetMapping("/contas-receber/cliente/{clienteId}")
     public ResponseEntity<List<ContasAReceber>> contasCliente(@PathVariable Long clienteId) {

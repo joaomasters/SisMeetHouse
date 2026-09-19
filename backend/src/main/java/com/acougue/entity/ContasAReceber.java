@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "contas_a_receber", indexes = {
-    @Index(name = "idx_contas_cliente_status", columnList = "cliente_id, status")
+        @Index(name = "idx_contas_cliente_status", columnList = "cliente_id, status")
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ContasAReceber {
@@ -25,6 +25,17 @@ public class ContasAReceber {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "faturamento_id")
     private FaturamentoCliente faturamento;
+
+    /**
+     * Preenchido quando esta conta (tipicamente um fiado avulso lançado pelo
+     * PDV) é agrupada dentro de um fechamento gerado depois. A partir daí o
+     * status vira AGRUPADO e o pagamento passa a acontecer só pela conta
+     * consolidada do fechamento (ver `faturamento` acima, na conta nova) —
+     * nunca os dois ao mesmo tempo, pra não cobrar duas vezes.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "absorvido_por_faturamento_id")
+    private FaturamentoCliente absorvidoPorFaturamento;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venda_id")
@@ -50,7 +61,7 @@ public class ContasAReceber {
     private LocalDate dataPagamento;
 
     @Builder.Default
-    private String status = "ABERTO"; 
+    private String status = "ABERTO";
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

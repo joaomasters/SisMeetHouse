@@ -21,7 +21,6 @@ public class FaturamentoService {
 
     private final FaturamentoClienteRepository faturamentoRepo;
     private final ContasAReceberRepository     contasRepo;
-    private final VendaRepository              vendaRepo;
     private final ClienteRepository            clienteRepo;
 
 
@@ -43,56 +42,61 @@ public class FaturamentoService {
         LocalDateTime dtInicio = inicio.atStartOfDay();
         LocalDateTime dtFim    = fim.atTime(LocalTime.MAX);
 
-        List<Venda> vendas = vendaRepo.findVendasFaturamentoCliente(clienteId, dtInicio, dtFim);
+        // Agrupa só fiado avulso (lançado pelo PDV) ainda em aberto — nunca
+        // vendas já quitadas na hora (dinheiro/cartão/PIX) nem contas já
+        // absorvidas por outro fechamento. É isso que evita cobrar 2x.
+        List<ContasAReceber> elegiveis = contasRepo.buscarFiadoAvulsoElegivel(clienteId, dtInicio, dtFim);
 
-        if (vendas.isEmpty()) {
-            throw new BusinessException("Nenhuma venda encontrada para esse cliente no período informado — nada a faturar.");
+        if (elegiveis.isEmpty()) {
+            throw new BusinessException(
+                    "Nenhum fiado em aberto encontrado para esse cliente no período informado — nada a faturar.");
         }
 
-        BigDecimal total = vendas.stream()
-                .map(Venda::getTotal)
+        BigDecimal totalVendas = elegiveis.stream()
+                .map(ContasAReceber::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalPago = elegiveis.stream()
+                .map(ContasAReceber::getValorPago)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal saldo = totalVendas.subtract(totalPago).max(BigDecimal.ZERO);
 
         FaturamentoCliente fat = FaturamentoCliente.builder()
                 .cliente(cliente)
                 .periodoInicio(inicio)
                 .periodoFim(fim)
-                .totalVendas(total)
-                .totalPago(BigDecimal.ZERO)
-                .saldoDevedor(total)
-                .status("ABERTO")
+                .totalVendas(totalVendas)
+                .totalPago(totalPago)
+                .saldoDevedor(saldo)
+                .status(saldo.compareTo(BigDecimal.ZERO) == 0 ? "QUITADO" : "ABERTO")
                 .dataVencimento(fim.plusDays(5))
                 .build();
-
         fat = faturamentoRepo.save(fat);
+        final FaturamentoCliente faturamentoSalvo = fat;
 
-
-        ContasAReceber conta = ContasAReceber.builder()
+        ContasAReceber contaConsolidada = ContasAReceber.builder()
                 .cliente(cliente)
                 .faturamento(fat)
-                .descricao(String.format("Faturamento %s a %s", inicio, fim))
-                .valor(total)
+                .descricao(String.format("Faturamento %s a %s (%d venda(s) fiado)", inicio, fim, elegiveis.size()))
+                .valor(totalVendas)
+                .valorPago(totalPago)
                 .dataEmissao(LocalDate.now())
                 .dataVencimento(fat.getDataVencimento())
-                .status("ABERTO")
+                .status(fat.getStatus().equals("QUITADO") ? "PAGO" : "ABERTO")
                 .build();
-        contasRepo.save(conta);
+        contasRepo.save(contaConsolidada);
+
+        // Absorve as contas de fiado individuais: somem da lista solta de
+        // "a receber", mas continuam no banco pra auditoria/rastreabilidade,
+        // apontando pro fechamento que as engoliu.
+        elegiveis.forEach(c -> {
+            c.setStatus("AGRUPADO");
+            c.setAbsorvidoPorFaturamento(faturamentoSalvo);
+        });
+        contasRepo.saveAll(elegiveis);
 
         return fat;
-    }
-
-    /**
-     * Registra pagamento a partir do ID do fechamento (FaturamentoCliente),
-     * usado pela tela de Faturamento — evita a UI ter que conhecer o ID
-     * interno da ContasAReceber gerada junto com o fechamento.
-     */
-    @Transactional
-    public ContasAReceber registrarPagamentoPorFaturamento(Long faturamentoId, BigDecimal valorPago) {
-        ContasAReceber conta = contasRepo.findByFaturamentoId(faturamentoId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Conta a receber não encontrada para o fechamento: " + faturamentoId));
-        return registrarPagamento(conta.getId(), valorPago);
     }
 
     @Transactional
