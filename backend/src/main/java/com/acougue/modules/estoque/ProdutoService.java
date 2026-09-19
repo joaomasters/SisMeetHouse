@@ -1,12 +1,14 @@
 package com.acougue.modules.estoque;
 
 import com.acougue.entity.Produto;
+import com.acougue.modules.balanca.ItemPendenteBalancaService;
 import com.acougue.repository.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -14,6 +16,7 @@ import java.util.List;
 public class ProdutoService {
 
     private final ProdutoRepository produtoRepo;
+    private final ItemPendenteBalancaService itemPendenteBalancaService;
 
     public List<Produto> listarAtivos() {
         return produtoRepo.findByAtivoTrue();
@@ -57,6 +60,8 @@ public class ProdutoService {
     @Transactional
     public Produto atualizar(Long id, Produto dados) {
         Produto existente = buscarPorId(id);
+        BigDecimal precoAnterior = existente.getPrecoVenda();
+
         existente.setNome(dados.getNome());
         existente.setDescricao(dados.getDescricao());
         existente.setPrecoVenda(dados.getPrecoVenda());
@@ -70,7 +75,15 @@ public class ProdutoService {
         existente.setEstoqueMinimo(dados.getEstoqueMinimo());
         existente.setCategoria(dados.getCategoria());
         existente.setAtivo(dados.getAtivo());
-        return produtoRepo.save(existente);
+        Produto salvo = produtoRepo.save(existente);
+
+        // Gera/atualiza item na fila de carga de balança se o preço mudou e
+        // o produto tem PLU cadastrado. Não depende de como a carga chega
+        // fisicamente na balança (rede, agente local etc.) — só registra a
+        // intenção "esse preço precisa ser sincronizado".
+        itemPendenteBalancaService.registrarAlteracaoPreco(salvo, precoAnterior, salvo.getPrecoVenda());
+
+        return salvo;
     }
 
     @Transactional

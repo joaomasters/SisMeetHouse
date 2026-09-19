@@ -67,3 +67,14 @@ export interface ProcessoDesossa {
   recebimento?: { id: number; numeroNf: string | null; fornecedor: string } | null
   resultados: ProcessoDesossaResultado[]
 }
+
+export interface ItemPendenteBalanca {
+  id: number
+  produtoId: number
+  produtoNome: string
+  codigoBalanca: number
+  precoAnterior: number
+  precoNovo: number
+  status: 'PENDENTE' | 'ENVIADO' | 'CANCELADO'
+  criadoEm: string
+}

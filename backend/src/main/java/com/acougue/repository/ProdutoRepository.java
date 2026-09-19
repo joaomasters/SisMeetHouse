@@ -31,6 +31,10 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     List<Produto> findAllByAtivoTrue();
 
+    // LEGADO: heurística antiga baseada em updatedAt (disparava para qualquer edição
+    // do produto, não só preço). Substituída pela fila em ItemPendenteBalancaService /
+    // ItemPendenteBalancaRepository (ver migration V13). Sem uso atual — mantido por
+    // enquanto caso algum relatório antigo dependa dele; remover se confirmado sem uso.
     @Query("SELECT p FROM Produto p WHERE p.codigoBalanca IS NOT NULL AND p.ativo = true AND p.updatedAt > :desde")
     List<Produto> findBalancaAtualizadosDesde(@Param("desde") LocalDateTime desde);
 
