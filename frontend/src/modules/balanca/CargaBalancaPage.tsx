@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Scale, Download, Eye } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Scale, Download, Eye, Clock, X, Send } from 'lucide-react'
 import { api } from '@/shared/api/axios'
 import toast from 'react-hot-toast'
-import type { Produto } from '@/types/produto'
+import type { Produto, ItemPendenteBalanca } from '@/types/produto'
 
 type TipoBalanca = 'TOLEDO_MGV7' | 'FILIZOLA_SMART'
 
@@ -11,6 +11,116 @@ const BALANÇAS = [
   { value: 'TOLEDO_MGV7'    as TipoBalanca, label: 'Toledo MGV6/MGV7',  desc: 'Formato PLU com cabeçalho 99|CARGA|1|1' },
   { value: 'FILIZOLA_SMART' as TipoBalanca, label: 'Filizola Smart',    desc: 'Formato CSV posicional 1;PLU;NOME;PRECO;VALIDADE' },
 ]
+
+const fmtMoeda = (v: number) => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+function PendenciasBalanca() {
+  const qc = useQueryClient()
+
+  const { data: pendentes = [], isLoading } = useQuery<ItemPendenteBalanca[]>({
+    queryKey: ['balanca-pendentes'],
+    queryFn: () => api.get('/balanca/pendentes').then(r => r.data),
+    refetchInterval: 30_000,
+  })
+
+  const cancelar = useMutation({
+    mutationFn: (id: number) => api.post(`/balanca/pendentes/${id}/cancelar`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['balanca-pendentes'] })
+      toast.success('Item removido da fila.')
+    },
+  })
+
+  const gerarCarga = useMutation({
+    mutationFn: () => api.post('/balanca/pendentes/gerar-carga'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['balanca-pendentes'] })
+      toast.success('Carga gerada! Aguardando o agente local aplicar na balança.')
+    },
+  })
+
+  return (
+    <div className="bg-white rounded-xl shadow p-5 mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-medium text-gray-900 flex items-center gap-2">
+          <Clock size={16} className="text-amber-600" />
+          Preços pendentes de carga na balança
+          {pendentes.length > 0 && (
+            <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+              {pendentes.length}
+            </span>
+          )}
+        </p>
+        <button
+          onClick={() => gerarCarga.mutate()}
+          disabled={gerarCarga.isPending || pendentes.length === 0}
+          className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+        >
+          <Send size={14} />
+          {gerarCarga.isPending ? 'Gerando...' : 'Gerar carga agora'}
+        </button>
+      </div>
+
+      {isLoading && <p className="text-sm text-gray-400 py-4">Carregando...</p>}
+
+      {!isLoading && pendentes.length === 0 && (
+        <p className="text-sm text-gray-400 py-4 text-center">
+          Nenhum preço pendente — a balança está com os valores em dia.
+        </p>
+      )}
+
+      {pendentes.length > 0 && (
+        <div className="max-h-64 overflow-y-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-3 py-2 text-left text-gray-500">PLU</th>
+                <th className="px-3 py-2 text-left text-gray-500">Produto</th>
+                <th className="px-3 py-2 text-right text-gray-500">Preço anterior</th>
+                <th className="px-3 py-2 text-right text-gray-500">Preço novo</th>
+                <th className="px-3 py-2 text-left text-gray-500">Desde</th>
+                <th className="px-3 py-2 text-center text-gray-500">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {pendentes.map(item => (
+                <tr key={item.id}>
+                  <td className="px-3 py-2 font-mono">{String(item.codigoBalanca).padStart(5, '0')}</td>
+                  <td className="px-3 py-2">{item.produtoNome}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-gray-400 line-through">
+                    {fmtMoeda(item.precoAnterior)}
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums font-medium text-amber-700">
+                    {fmtMoeda(item.precoNovo)}
+                  </td>
+                  <td className="px-3 py-2 text-gray-500">
+                    {new Date(item.criadoEm).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <button
+                      onClick={() => cancelar.mutate(item.id)}
+                      disabled={cancelar.isPending}
+                      title="Remover da fila (não altera o preço no sistema, só cancela a sincronização com a balança)"
+                      className="text-gray-400 hover:text-red-600 disabled:opacity-50"
+                    >
+                      <X size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <p className="text-[11px] text-gray-400 mt-3">
+        Esses preços foram alterados no sistema mas ainda não chegaram fisicamente na balança.
+        A carga é gerada automaticamente todo dia às 7h, ou você pode forçar agora com o botão acima.
+        Depois que a carga é gerada, o agente local instalado perto da balança faz o envio.
+      </p>
+    </div>
+  )
+}
 
 export default function CargaBalancaPage() {
   const [tipo, setTipo]         = useState<TipoBalanca>('TOLEDO_MGV7')
@@ -63,6 +173,9 @@ export default function CargaBalancaPage() {
           Gera arquivo de atualização de preços e cadastro de PLUs para balanças
         </p>
       </div>
+
+      {/* Fila de preços pendentes de carga */}
+      <PendenciasBalanca />
 
       {/* Seletor de balança */}
       <div className="grid grid-cols-2 gap-4 mb-6">

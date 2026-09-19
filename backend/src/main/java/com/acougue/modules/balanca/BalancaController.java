@@ -4,6 +4,7 @@ import com.acougue.entity.CargaBalanca;
 import com.acougue.entity.Modulo;
 import com.acougue.entity.Produto;
 import com.acougue.modules.balanca.dto.EanParseResult;
+import com.acougue.modules.balanca.dto.ItemPendenteBalancaDTO;
 import com.acougue.modules.estoque.ProdutoService;
 import com.acougue.repository.CargaBalancaRepository;
 import com.acougue.security.Acao;
@@ -17,16 +18,53 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/balanca")
 @RequiredArgsConstructor
 public class BalancaController {
 
-    private final EanBalancaParser        eanParser;
-    private final BalancaArquivoGerador   gerador;
-    private final ProdutoService          produtoService;
-    private final CargaBalancaRepository  cargaRepo;
+    private final EanBalancaParser             eanParser;
+    private final BalancaArquivoGerador        gerador;
+    private final ProdutoService               produtoService;
+    private final CargaBalancaRepository       cargaRepo;
+    private final ItemPendenteBalancaService   itemPendenteBalancaService;
+    private final BalancaSchedulerService      schedulerService;
+
+    @ExigirPermissao(modulo = Modulo.CARGA_BALANCA, acao = Acao.VER)
+    @GetMapping("/pendentes")
+    public ResponseEntity<List<ItemPendenteBalancaDTO>> listarPendentes() {
+        return ResponseEntity.ok(itemPendenteBalancaService.listarPendentes());
+    }
+
+    @ExigirPermissao(modulo = Modulo.CARGA_BALANCA, acao = Acao.VER)
+    @GetMapping("/pendentes/count")
+    public ResponseEntity<Map<String, Long>> contarPendentes() {
+        return ResponseEntity.ok(Map.of("total", itemPendenteBalancaService.contarPendentes()));
+    }
+
+    @ExigirPermissao(modulo = Modulo.CARGA_BALANCA, acao = Acao.EXCLUIR)
+    @PostMapping("/pendentes/{id}/cancelar")
+    public ResponseEntity<Void> cancelarPendente(@PathVariable Long id) {
+        itemPendenteBalancaService.cancelar(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @ExigirPermissao(modulo = Modulo.CARGA_BALANCA, acao = Acao.CRIAR)
+    @PostMapping("/pendentes/gerar-carga")
+    public ResponseEntity<Map<String, Object>> gerarCargaComPendentes() {
+        var carga = schedulerService.gerarCargaManual();
+        if (carga == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erro", "Nenhum produto com codigo_balanca cadastrado"));
+        }
+        return ResponseEntity.ok(Map.of(
+                "id",       carga.getId(),
+                "produtos", carga.getProdutosCount(),
+                "status",   carga.getStatus()
+        ));
+    }
 
     @ExigirPermissao(modulo = Modulo.CARGA_BALANCA, acao = Acao.VER)
     @GetMapping("/parse/{ean13}")

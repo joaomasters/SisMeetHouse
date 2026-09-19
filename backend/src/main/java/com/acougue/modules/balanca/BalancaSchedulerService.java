@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -19,9 +18,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BalancaSchedulerService {
 
-    private final ProdutoRepository       produtoRepo;
-    private final CargaAgendadaRepository cargaAgendadaRepo;
-    private final BalancaArquivoGerador   gerador;
+    private final ProdutoRepository            produtoRepo;
+    private final CargaAgendadaRepository      cargaAgendadaRepo;
+    private final BalancaArquivoGerador        gerador;
+    private final com.acougue.modules.balanca.ItemPendenteBalancaService itemPendenteBalancaService;
 
     @Value("${balanca.scheduler.tipo:TOLEDO_MGV7}")
     private String tipoBalanca;
@@ -37,17 +37,14 @@ public class BalancaSchedulerService {
     public void executarCargaDiaria() {
         log.info("[Balanca] Iniciando verificacao diaria de precos...");
 
-        LocalDateTime ultimaCarga = cargaAgendadaRepo.findUltimaCargaAplicada()
-                .orElse(LocalDateTime.now().minusDays(30));
+        long pendentes = itemPendenteBalancaService.contarPendentes();
 
-        long alterados = produtoRepo.countBalancaAtualizadosDesde(ultimaCarga);
-
-        if (alterados == 0) {
-            log.info("[Balanca] Nenhum preco alterado desde {}. Carga ignorada.", ultimaCarga);
+        if (pendentes == 0) {
+            log.info("[Balanca] Nenhum item pendente na fila de precos. Carga ignorada.");
             return;
         }
 
-        log.info("[Balanca] {} produto(s) com preco alterado desde {}. Gerando carga...", alterados, ultimaCarga);
+        log.info("[Balanca] {} item(ns) pendente(s) na fila de precos. Gerando carga...", pendentes);
         gerarCarga();
     }
 
@@ -80,6 +77,7 @@ public class BalancaSchedulerService {
                 .build();
 
         CargaAgendada salva = cargaAgendadaRepo.save(carga);
+        itemPendenteBalancaService.marcarPendentesComoEnviados(salva);
         log.info("[Balanca] Carga #{} criada com {} produtos. Aguardando agente local.",
                 salva.getId(), produtos.size());
         return salva;

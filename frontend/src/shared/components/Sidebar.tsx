@@ -5,7 +5,9 @@ import {
   ClipboardList, TrendingDown, ArrowDownCircle, BarChart, LogOut,
   Truck, FileText, Users, ShieldCheck, Home
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
+import { api } from '../api/axios'
 import { removeSessao } from '../auth'
 import { usePermissao } from '../hooks/usePermissao'
 
@@ -43,6 +45,18 @@ const nav = [
 export default function Sidebar() {
   const navigate = useNavigate()
   const { podeVer, isSuperAdmin } = usePermissao()
+
+  const podeVerBalanca = isSuperAdmin || podeVer('CARGA_BALANCA')
+
+  // Badge de pendências de preço na balança — só busca se o usuário
+  // realmente enxerga o módulo, pra não gerar chamada desnecessária.
+  const { data: pendentesBalanca } = useQuery<{ total: number }>({
+    queryKey: ['balanca-pendentes-count'],
+    queryFn: () => api.get('/balanca/pendentes/count').then(r => r.data),
+    enabled: podeVerBalanca,
+    refetchInterval: 60_000,
+  })
+  const qtdPendentesBalanca = pendentesBalanca?.total ?? 0
 
   const logout = () => {
     removeSessao()
@@ -105,7 +119,12 @@ export default function Sidebar() {
               }
             >
               <Icon size={16} />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.href === '/balanca' && qtdPendentesBalanca > 0 && (
+                <span className="bg-amber-500 text-gray-900 text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {qtdPendentesBalanca > 99 ? '99+' : qtdPendentesBalanca}
+                </span>
+              )}
             </NavLink>
           )
         })}
