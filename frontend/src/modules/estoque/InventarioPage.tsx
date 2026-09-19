@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../shared/api/axios'
-import { ClipboardList, CheckCircle2, XCircle, ChevronRight } from 'lucide-react'
+import { ClipboardList, CheckCircle2, XCircle, ChevronRight, Filter } from 'lucide-react'
 
 interface Inventario {
   id: number; status: string; observacao: string
@@ -13,15 +13,25 @@ interface InventarioItem {
   saldoSistema: number; saldoContado: number | null; divergencia: number | null
 }
 
+const hoje = new Date().toISOString().slice(0, 10)
+const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
 export default function InventarioPage() {
   const qc = useQueryClient()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [observacao, setObservacao] = useState('')
   const [contagens, setContagens] = useState<Record<number, string>>({})
 
+  // Filtro de período da lista de inventários — padrão de 30 dias, com
+  // opção de limpar pra ver o histórico completo.
+  const [filtroInicio, setFiltroInicio] = useState(trintaDiasAtras)
+  const [filtroFim, setFiltroFim]       = useState(hoje)
+
   const lista = useQuery<Inventario[]>({
-    queryKey: ['inventarios'],
-    queryFn: () => api.get('/estoque/inventario').then(r => r.data),
+    queryKey: ['inventarios', filtroInicio, filtroFim],
+    queryFn: () => api.get('/estoque/inventario', {
+      params: { inicio: filtroInicio || undefined, fim: filtroFim || undefined },
+    }).then(r => r.data),
   })
 
   const itens = useQuery<InventarioItem[]>({
@@ -89,6 +99,26 @@ export default function InventarioPage() {
             </button>
           </div>
 
+          <div className="bg-white rounded-xl border p-3 space-y-2">
+            <p className="text-xs font-semibold text-gray-500 flex items-center gap-1.5">
+              <Filter size={12} /> Filtrar por período
+            </p>
+            <div className="flex gap-2">
+              <input type="date" value={filtroInicio} onChange={e => setFiltroInicio(e.target.value)}
+                className="w-full border rounded-lg px-2 py-1.5 text-xs" />
+              <input type="date" value={filtroFim} onChange={e => setFiltroFim(e.target.value)}
+                className="w-full border rounded-lg px-2 py-1.5 text-xs" />
+            </div>
+            {(filtroInicio || filtroFim) && (
+              <button
+                onClick={() => { setFiltroInicio(''); setFiltroFim('') }}
+                className="text-[11px] text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Ver histórico completo
+              </button>
+            )}
+          </div>
+
           <div className="space-y-2">
             {lista.data?.map(inv => (
               <button key={inv.id} onClick={() => setSelectedId(inv.id)}
@@ -108,6 +138,9 @@ export default function InventarioPage() {
                 </p>
               </button>
             ))}
+            {lista.data?.length === 0 && (
+              <p className="text-center text-xs text-gray-400 py-4">Nenhum inventário no período.</p>
+            )}
           </div>
         </div>
 

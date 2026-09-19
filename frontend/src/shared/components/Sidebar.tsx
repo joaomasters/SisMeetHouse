@@ -3,7 +3,7 @@ import {
   ShoppingCart, Package, Scissors, DollarSign,
   CreditCard, BarChart2, Scale, AlertTriangle,
   ClipboardList, TrendingDown, ArrowDownCircle, BarChart, LogOut,
-  Truck, FileText, Users, ShieldCheck, Home
+  Truck, FileText, Users, ShieldCheck, Home, Contact
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
@@ -28,6 +28,7 @@ const nav = [
   { label: 'NF de Saída', href: '/fiscal/notas', icon: FileText, modulo: 'NF_SAIDA' },
 
   { separator: 'Financeiro' },
+  { label: 'Clientes',         href: '/financeiro/clientes',       icon: Contact,      modulo: 'CLIENTES' },
   { label: 'Faturamento',      href: '/financeiro/faturamento',    icon: DollarSign,  modulo: 'FATURAMENTO' },
   { label: 'Contas a Receber', href: '/financeiro/contas-receber', icon: CreditCard,  modulo: 'CONTAS_RECEBER' },
   { label: 'Contas a Pagar',   href: '/financeiro/contas-pagar',   icon: TrendingDown, modulo: 'CONTAS_PAGAR' },

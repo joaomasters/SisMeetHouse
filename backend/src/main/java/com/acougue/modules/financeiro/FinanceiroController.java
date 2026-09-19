@@ -29,7 +29,10 @@ public class FinanceiroController {
     @ExigirPermissao(modulo = Modulo.CLIENTES, acao = Acao.VER)
     @GetMapping("/clientes")
     public ResponseEntity<List<Cliente>> listarClientes() {
-        return ResponseEntity.ok(clienteRepository.findByAtivoTrue());
+        // Exclui o cliente genérico "CONSUMIDOR" (VAREJO) — esse endpoint alimenta
+        // o seletor de "Gerar Fechamento", que é só pra clientes faturáveis
+        // (atacado/restaurante/conveniado), não pra venda de balcão avulsa.
+        return ResponseEntity.ok(clienteRepository.findByAtivoTrueAndTipoClienteNot("VAREJO"));
     }
 
     @ExigirPermissao(modulo = Modulo.FATURAMENTO, acao = Acao.CRIAR)
@@ -45,6 +48,14 @@ public class FinanceiroController {
     @GetMapping("/faturamento/abertos")
     public ResponseEntity<List<FaturamentoCliente>> listarAbertos() {
         return ResponseEntity.ok(faturamentoService.listarFaturamentosAbertos());
+    }
+
+    @ExigirPermissao(modulo = Modulo.FATURAMENTO, acao = Acao.EDITAR)
+    @PostMapping("/faturamento/{faturamentoId}/pagar")
+    public ResponseEntity<ContasAReceber> registrarPagamentoFaturamento(
+            @PathVariable Long faturamentoId,
+            @RequestParam BigDecimal valor) {
+        return ResponseEntity.ok(faturamentoService.registrarPagamentoPorFaturamento(faturamentoId, valor));
     }
 
     @ExigirPermissao(modulo = Modulo.CONTAS_RECEBER, acao = Acao.VER)

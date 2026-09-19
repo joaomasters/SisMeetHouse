@@ -53,8 +53,11 @@ export default function NotaFiscalPage() {
   })
 
   const { data: clientes = [] } = useQuery<Cliente[]>({
-    queryKey: ['clientes'],
-    queryFn: () => api.get('/financeiro/clientes').then(r => r.data),
+    queryKey: ['clientes-todos'],
+    // NF de Saída pode ser emitida pra qualquer cliente (inclusive varejo),
+    // por isso usa /clientes (lista completa) e não /financeiro/clientes
+    // (que é filtrado só pra atacado/convênio, usado na tela de Faturamento).
+    queryFn: () => api.get('/clientes').then(r => r.data),
   })
 
   const { data: notas = [], isLoading } = useQuery<NotaFiscal[]>({

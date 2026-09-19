@@ -97,6 +97,10 @@ public class InventarioService {
         return inventarioRepo.findAllByOrderByCreatedAtDesc();
     }
 
+    public List<InventarioFisico> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
+        return inventarioRepo.buscarPorPeriodo(inicio, fim);
+    }
+
     public List<InventarioFisicoItem> listarItens(Long inventarioId) {
         return itemRepo.findByInventarioIdOrderByProdutoNome(inventarioId);
     }

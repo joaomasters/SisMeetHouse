@@ -9,6 +9,7 @@ import DesossaPage from './modules/estoque/DesossaPage'
 import InventarioPage from './modules/estoque/InventarioPage'
 import PerdasPage from './modules/estoque/PerdasPage'
 import FaturamentoPage from './modules/financeiro/FaturamentoPage'
+import ClientesPage from './modules/financeiro/ClientesPage'
 import ContasReceberPage from './modules/financeiro/ContasReceberPage'
 import ContasPagarPage from './modules/financeiro/ContasPagarPage'
 import DrePage from './modules/financeiro/DrePage'
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/estoque/recebimento"         element={<RecebimentoPage />} />
             <Route path="/estoque/fichas-desossa"     element={<FichasDesossaPage />} />
             <Route path="/fiscal/notas"              element={<NotaFiscalPage />} />
+            <Route path="/financeiro/clientes"       element={<ClientesPage />} />
             <Route path="/financeiro/faturamento"    element={<FaturamentoPage />} />
             <Route path="/financeiro/contas-receber" element={<ContasReceberPage />} />
             <Route path="/financeiro/contas-pagar"   element={<ContasPagarPage />} />
