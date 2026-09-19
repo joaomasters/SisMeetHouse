@@ -110,5 +110,6 @@ export interface ContasAReceber {
   dataEmissao: string
   dataVencimento?: string
   dataPagamento?: string
-  status: 'ABERTO' | 'PARCIAL' | 'PAGO' | 'CANCELADO'
+  status: 'ABERTO' | 'PARCIAL' | 'PAGO' | 'CANCELADO' | 'AGRUPADO'
+  absorvidoPorFaturamento?: { id: number } | null
 }

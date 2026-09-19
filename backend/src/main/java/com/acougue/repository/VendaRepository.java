@@ -19,22 +19,27 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
 
     @Query("SELECT v FROM Venda v WHERE v.dataVenda BETWEEN :inicio AND :fim ORDER BY v.dataVenda DESC")
     List<Venda> findByPeriodo(
-        @Param("inicio") LocalDateTime inicio,
-        @Param("fim") LocalDateTime fim
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim
     );
 
+    // LEGADO: usada pelo antigo gerarFechamento(), que somava TODAS as vendas
+    // do período (inclusive já quitadas na hora e já viradas fiado avulso),
+    // causando cobrança em duplicidade. Substituída por
+    // ContasAReceberRepository.buscarFiadoAvulsoElegivel (ver migration V14).
+    // Sem uso atual — mantida por enquanto caso algo mais dependa dela.
     @Query("SELECT v FROM Venda v WHERE v.cliente.id = :clienteId " +
-           "AND v.status = 'FECHADA' AND v.dataVenda BETWEEN :inicio AND :fim")
+            "AND v.status = 'FECHADA' AND v.dataVenda BETWEEN :inicio AND :fim")
     List<Venda> findVendasFaturamentoCliente(
-        @Param("clienteId") Long clienteId,
-        @Param("inicio") LocalDateTime inicio,
-        @Param("fim") LocalDateTime fim
+            @Param("clienteId") Long clienteId,
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim
     );
 
     @Query("SELECT COALESCE(SUM(v.total), 0) FROM Venda v " +
-           "WHERE v.dataVenda BETWEEN :inicio AND :fim AND v.status = 'FECHADA'")
+            "WHERE v.dataVenda BETWEEN :inicio AND :fim AND v.status = 'FECHADA'")
     BigDecimal somarTotalPeriodo(
-        @Param("inicio") LocalDateTime inicio,
-        @Param("fim") LocalDateTime fim
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim
     );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CreditCard, CheckCircle } from 'lucide-react'
+import { CreditCard, CheckCircle, Layers } from 'lucide-react'
 import { api } from '@/shared/api/axios'
 import toast from 'react-hot-toast'
 import type { ContasAReceber, Cliente } from '@/types/venda'
@@ -12,11 +13,13 @@ const statusCor: Record<string, string> = {
   PARCIAL:   'bg-yellow-100 text-yellow-700',
   PAGO:      'bg-emerald-100 text-emerald-700',
   CANCELADO: 'bg-gray-100 text-gray-500',
+  AGRUPADO:  'bg-blue-50 text-blue-500',
 }
 
 export default function ContasReceberPage() {
   const qc = useQueryClient()
-  const [clienteId, setClienteId] = useState('')
+  const [searchParams] = useSearchParams()
+  const [clienteId, setClienteId] = useState(searchParams.get('clienteId') ?? '')
   const [pagarId, setPagarId]     = useState<number | null>(null)
   const [valorPag, setValorPag]   = useState('')
 
@@ -45,7 +48,9 @@ export default function ContasReceberPage() {
     },
   })
 
-  const abertas = contas.filter(c => c.status !== 'PAGO' && c.status !== 'CANCELADO')
+  // AGRUPADO não entra na conta — o valor dela já está representado pela
+  // conta consolidada do fechamento (senão contaríamos o mesmo saldo 2x).
+  const abertas = contas.filter(c => c.status === 'ABERTO' || c.status === 'PARCIAL')
   const totalAberto = abertas.reduce((s, c) => s + c.valor - c.valorPago, 0)
 
   return (
@@ -102,8 +107,15 @@ export default function ContasReceberPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {contas.map(c => (
-                <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">{c.descricao ?? '—'}</td>
+                <tr key={c.id} className={`hover:bg-gray-50 ${c.status === 'AGRUPADO' ? 'opacity-60' : ''}`}>
+                  <td className="px-4 py-3">
+                    {c.descricao ?? '—'}
+                    {c.status === 'AGRUPADO' && c.absorvidoPorFaturamento && (
+                      <span className="flex items-center gap-1 text-[11px] text-blue-500 mt-0.5">
+                        <Layers size={11} /> Agrupado no Fechamento #{c.absorvidoPorFaturamento.id}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-right tabular-nums">{brl(c.valor)}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{brl(c.valorPago)}</td>
                   <td className="px-4 py-3 text-right tabular-nums font-bold text-red-600">
@@ -116,7 +128,7 @@ export default function ContasReceberPage() {
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-500">{c.dataVencimento ?? '—'}</td>
                   <td className="px-4 py-3">
-                    {c.status !== 'PAGO' && c.status !== 'CANCELADO' && (
+                    {(c.status === 'ABERTO' || c.status === 'PARCIAL') && (
                       <button
                         onClick={() => setPagarId(c.id)}
                         className="p-1.5 rounded hover:bg-emerald-50 text-gray-400 hover:text-emerald-600"
