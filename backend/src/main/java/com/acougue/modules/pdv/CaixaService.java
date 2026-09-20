@@ -27,9 +27,20 @@ public class CaixaService {
      * "adivinhar"/fixar um id de caixa. Se não houver nenhum caixa aberto,
      * o operador precisa abrir um primeiro.
      */
-    public Caixa buscarCaixaAberto() {
-        return caixaRepo.findFirstByStatusOrderByDataAberturaDesc("ABERTO")
-                .orElseThrow(() -> new BusinessException("Nenhum caixa aberto no momento. Abra um caixa antes de vender."));
+    /**
+     * Busca o caixa aberto do operador informado. Antes esse método pegava
+     * "o caixa aberto mais recente" globalmente, o que quebrava se dois
+     * operadores tivessem caixa aberto ao mesmo tempo (um deles ficava
+     * invisível pro sistema). Agora cada operador só enxerga o seu.
+     */
+    public Caixa buscarCaixaAbertoDoOperador(Long operadorId) {
+        return caixaRepo.findFirstByOperadorIdAndStatus(operadorId, "ABERTO")
+                .orElseThrow(() -> new BusinessException("Você não tem nenhum caixa aberto. Abra um caixa antes de vender."));
+    }
+
+    /** Histórico de sessões de caixa (abertas e fechadas), mais recente primeiro. */
+    public List<Caixa> listarTodos() {
+        return caixaRepo.findAllByOrderByDataAberturaDesc();
     }
 
     @Transactional
