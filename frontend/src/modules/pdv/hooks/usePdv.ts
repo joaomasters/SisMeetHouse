@@ -1,24 +1,31 @@
 import { useState, useCallback, useEffect } from 'react'
 import { api } from '@/shared/api/axios'
+import { getUsuarioId } from '@/shared/auth'
 import toast from 'react-hot-toast'
 import type { Venda, ItemVendaDTO, PagamentoDTO } from '@/types/venda'
-
-const OPERADOR_ID = 1
 
 export function usePdv() {
   const [venda, setVenda]         = useState<Venda | null>(null)
   const [caixaId, setCaixaId]     = useState<number | null>(null)
+  const [semCaixa, setSemCaixa]   = useState(false)
   const [comandas, setComandas]   = useState<Venda[]>([])
   const [loading, setLoading]     = useState(false)
   const [scanLoading, setScan]    = useState(false)
 
-  // Descobre o caixa realmente aberto agora, em vez de fixar um id que pode
-  // estar fechado (isso travava toda venda com "Caixa está fechado").
-  useEffect(() => {
-    api.get<{ id: number }>('/pdv/caixa/aberto')
-      .then(({ data }) => setCaixaId(data.id))
-      .catch(() => toast.error('Nenhum caixa aberto. Abra um caixa antes de vender.'))
-  }, [])
+  const operadorId = getUsuarioId()
+
+  // Descobre o caixa aberto do operador logado, em vez de fixar um id que
+  // pode estar fechado ou pertencer a outro operador (isso travava toda
+  // venda com "Caixa está fechado" e não dava pra ter mais de um caixa
+  // aberto ao mesmo tempo no sistema).
+  const verificarCaixa = useCallback(() => {
+    if (!operadorId) return
+    api.get<{ id: number }>('/pdv/caixa/aberto', { params: { operadorId }, silent: true } as any)
+      .then(({ data }) => { setCaixaId(data.id); setSemCaixa(false) })
+      .catch(() => { setCaixaId(null); setSemCaixa(true) })
+  }, [operadorId])
+
+  useEffect(() => { verificarCaixa() }, [verificarCaixa])
 
   const carregarComandas = useCallback(async () => {
     if (!caixaId) return
@@ -42,14 +49,14 @@ export function usePdv() {
   const iniciarVenda = useCallback(async (clienteId?: number): Promise<Venda> => {
     if (!caixaId) throw new Error('Nenhum caixa aberto.')
     const { data } = await api.post<Venda>('/pdv/vendas/abrir', {
-      operadorId: OPERADOR_ID,
+      operadorId,
       caixaId,
       clienteId:  clienteId ?? null,
     })
     setVenda(data)
     carregarComandas()
     return data
-  }, [caixaId, carregarComandas])
+  }, [caixaId, operadorId, carregarComandas])
 
   const adicionarItem = useCallback(async (barcode: string) => {
     setScan(true)
@@ -121,10 +128,27 @@ export function usePdv() {
     carregarComandas()
   }, [venda, carregarComandas])
 
+  const abrirCaixa = useCallback(async (valorAbertura: number) => {
+    if (!operadorId) throw new Error('Usuário não identificado.')
+    await api.post('/pdv/caixa/abrir', null, { params: { operadorId, valorAbertura } })
+    verificarCaixa()
+  }, [operadorId, verificarCaixa])
+
+  const fecharCaixa = useCallback(async (valorInformado: number) => {
+    if (!caixaId) return
+    await api.post(`/pdv/caixa/${caixaId}/fechar`, null, { params: { valorInformado } })
+    setCaixaId(null)
+    setVenda(null)
+    setComandas([])
+    verificarCaixa()
+  }, [caixaId, verificarCaixa])
+
   return {
     venda,
     comandas,
     caixaId,
+    semCaixa,
+    operadorId,
     loading,
     scanLoading,
     totalVenda: venda?.total ?? 0,
@@ -135,6 +159,8 @@ export function usePdv() {
     cancelarVenda,
     iniciarVenda,
     selecionarComanda,
+    abrirCaixa,
+    fecharCaixa,
     novaComanda: () => setVenda(null), // limpa a comanda ativa, sem fechar nenhuma
   }
 }

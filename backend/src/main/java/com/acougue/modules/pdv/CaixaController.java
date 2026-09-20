@@ -22,8 +22,14 @@ public class CaixaController {
 
     @ExigirPermissao(modulo = Modulo.PDV, acao = Acao.VER)
     @GetMapping("/aberto")
-    public ResponseEntity<Caixa> caixaAberto() {
-        return ResponseEntity.ok(caixaService.buscarCaixaAberto());
+    public ResponseEntity<Caixa> caixaAberto(@RequestParam Long operadorId) {
+        return ResponseEntity.ok(caixaService.buscarCaixaAbertoDoOperador(operadorId));
+    }
+
+    @ExigirPermissao(modulo = Modulo.PDV, acao = Acao.VER)
+    @GetMapping
+    public ResponseEntity<List<Caixa>> listar() {
+        return ResponseEntity.ok(caixaService.listarTodos());
     }
 
     @ExigirPermissao(modulo = Modulo.SANGRIA, acao = Acao.CRIAR)

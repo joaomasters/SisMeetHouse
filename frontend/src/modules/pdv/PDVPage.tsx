@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { ShoppingBag, Wifi, WifiOff, Trash2, Plus, User } from 'lucide-react'
+import { ShoppingBag, Wifi, WifiOff, Trash2, Plus, User, LockOpen, Lock } from 'lucide-react'
 import { useBarcodeScan } from '@/shared/hooks/useBarcodeScan'
+import { getNomeUsuario } from '@/shared/auth'
+import { api } from '@/shared/api/axios'
 import { usePdv } from './hooks/usePdv'
 import ListaItens from './components/ListaItens'
 import ModalPagamento from './components/ModalPagamento'
@@ -9,16 +11,35 @@ import NovaComandaModal from './components/NovaComandaModal'
 const brl = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
+interface FechamentoResumo {
+  valorAbertura: number
+  totalVendas: number
+  totalDinheiro: number
+  totalSuprimento: number
+  totalSangria: number
+  saldoEsperado: number
+  quantidadeVendas: number
+}
+
 export default function PDVPage() {
   const {
-    venda, comandas, loading, scanLoading, totalVenda,
+    venda, comandas, loading, scanLoading, totalVenda, caixaId, semCaixa,
     adicionarItem, removerItem, fecharVenda, cancelarVenda,
-    iniciarVenda, selecionarComanda,
+    iniciarVenda, selecionarComanda, abrirCaixa, fecharCaixa,
   } = usePdv()
 
   const [showPagto, setShowPagto] = useState(false)
   const [showNovaComanda, setShowNovaComanda] = useState(false)
   const [hora, setHora]           = useState(new Date())
+  const [valorAbertura, setValorAbertura] = useState('')
+  const [abrindo, setAbrindo]     = useState(false)
+
+  const [showFechar, setShowFechar]       = useState(false)
+  const [resumoFechar, setResumoFechar]   = useState<FechamentoResumo | null>(null)
+  const [valorContado, setValorContado]   = useState('')
+  const [fechando, setFechando]           = useState(false)
+
+  const nomeOperador = getNomeUsuario()
 
   // Relógio
   useEffect(() => {
@@ -39,8 +60,37 @@ export default function PDVPage() {
   // Listener global do leitor de código de barras
   useBarcodeScan({
     onScan: adicionarItem,
-    enabled: !showPagto,
+    enabled: !showPagto && !semCaixa,
   })
+
+  const handleAbrirCaixa = async () => {
+    setAbrindo(true)
+    try {
+      await abrirCaixa(parseFloat(valorAbertura.replace(',', '.')))
+      setValorAbertura('')
+    } finally {
+      setAbrindo(false)
+    }
+  }
+
+  const handleAbrirFechamento = async () => {
+    if (!caixaId) return
+    const { data } = await api.get(`/pdv/caixa/${caixaId}/fechamento`)
+    setResumoFechar(data)
+    setShowFechar(true)
+  }
+
+  const handleConfirmarFechamento = async () => {
+    setFechando(true)
+    try {
+      await fecharCaixa(parseFloat(valorContado.replace(',', '.')))
+      setShowFechar(false)
+      setResumoFechar(null)
+      setValorContado('')
+    } finally {
+      setFechando(false)
+    }
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gray-950 text-white select-none overflow-hidden">
@@ -50,6 +100,11 @@ export default function PDVPage() {
         <div className="flex items-center gap-3">
           <ShoppingBag size={20} className="text-red-400" />
           <span className="font-bold text-lg">PDV</span>
+          {nomeOperador && (
+            <span className="flex items-center gap-1.5 text-xs bg-gray-800 text-gray-300 px-2.5 py-1 rounded-full">
+              <User size={12} /> {nomeOperador}
+            </span>
+          )}
           {venda && (
             <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">
               Cupom #{venda.id}
@@ -62,6 +117,14 @@ export default function PDVPage() {
           )}
         </div>
         <div className="flex items-center gap-4 text-sm text-gray-400">
+          {caixaId && (
+            <button
+              onClick={handleAbrirFechamento}
+              className="flex items-center gap-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2.5 py-1.5 rounded-lg"
+            >
+              <Lock size={12} /> Fechar Caixa
+            </button>
+          )}
           {scanLoading
             ? <WifiOff size={16} className="text-yellow-500 animate-pulse" />
             : <Wifi size={16} className="text-emerald-500" />}
@@ -72,7 +135,38 @@ export default function PDVPage() {
         </div>
       </header>
 
+      {/* ── Sem caixa aberto: bloqueia o PDV até abrir um ── */}
+      {semCaixa && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 w-full max-w-sm text-center space-y-4">
+            <LockOpen size={32} className="mx-auto text-amber-500" />
+            <div>
+              <h2 className="font-bold text-lg">Nenhum caixa aberto</h2>
+              <p className="text-sm text-gray-400 mt-1">
+                {nomeOperador ? `${nomeOperador}, abra` : 'Abra'} um caixa informando o valor inicial (fundo de troco).
+              </p>
+            </div>
+            <input
+              type="text"
+              value={valorAbertura}
+              onChange={e => setValorAbertura(e.target.value)}
+              placeholder="0,00"
+              autoFocus
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-center text-lg tabular-nums"
+            />
+            <button
+              onClick={handleAbrirCaixa}
+              disabled={!valorAbertura || abrindo}
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {abrindo ? 'Abrindo...' : 'Abrir Caixa'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Barra de Comandas ── */}
+      {!semCaixa && (
       <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/60 border-b border-gray-800 overflow-x-auto shrink-0">
         <button
           onClick={() => setShowNovaComanda(true)}
@@ -101,8 +195,10 @@ export default function PDVPage() {
           </button>
         ))}
       </div>
+      )}
 
       {/* ── Corpo ── */}
+      {!semCaixa && (
       <div className="flex flex-1 overflow-hidden">
 
         {/* Coluna esquerda: itens */}
@@ -162,6 +258,7 @@ export default function PDVPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Modal de pagamento */}
       {showPagto && (
@@ -185,6 +282,74 @@ export default function PDVPage() {
           }}
           onFechar={() => setShowNovaComanda(false)}
         />
+      )}
+
+      {/* Modal de fechamento de caixa */}
+      {showFechar && resumoFechar && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-sm p-6 space-y-4">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <Lock size={18} /> Fechar Caixa
+            </h2>
+            <div className="space-y-1.5 text-sm">
+              {[
+                ['Abertura', resumoFechar.valorAbertura],
+                ['Vendas em dinheiro', resumoFechar.totalDinheiro],
+                ['Suprimento (+)', resumoFechar.totalSuprimento],
+                ['Sangria (-)', resumoFechar.totalSangria],
+              ].map(([label, val]) => (
+                <div key={label as string} className="flex justify-between text-gray-400">
+                  <span>{label}</span>
+                  <span className="tabular-nums text-gray-200">{brl(val as number)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between pt-2 border-t border-gray-800 font-bold">
+                <span>Saldo esperado em dinheiro</span>
+                <span className="text-emerald-400 tabular-nums">{brl(resumoFechar.saldoEsperado)}</span>
+              </div>
+              <p className="text-xs text-gray-500">{resumoFechar.quantidadeVendas} venda(s) no período</p>
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-400 font-medium block mb-1">Valor contado na gaveta (R$)</label>
+              <input
+                type="text"
+                value={valorContado}
+                onChange={e => setValorContado(e.target.value)}
+                placeholder="0,00"
+                autoFocus
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm tabular-nums"
+              />
+              {valorContado && (
+                (() => {
+                  const diff = parseFloat(valorContado.replace(',', '.')) - resumoFechar.saldoEsperado
+                  if (Math.abs(diff) < 0.01) return <p className="text-xs text-emerald-400 mt-1">Confere com o esperado.</p>
+                  return (
+                    <p className={`text-xs mt-1 ${diff > 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                      {diff > 0 ? 'Sobra' : 'Falta'} de {brl(Math.abs(diff))} em relação ao esperado.
+                    </p>
+                  )
+                })()
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowFechar(false); setResumoFechar(null); setValorContado('') }}
+                className="flex-1 py-2.5 border border-gray-700 rounded-lg text-sm hover:bg-gray-800"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarFechamento}
+                disabled={!valorContado || fechando}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium disabled:opacity-50"
+              >
+                {fechando ? 'Fechando...' : 'Confirmar Fechamento'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

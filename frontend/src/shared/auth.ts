@@ -9,6 +9,7 @@ export interface PermissaoModulo {
 
 export interface SessaoUsuario {
   token: string
+  usuarioId: number
   username: string
   nome: string
   perfil: string
@@ -40,3 +41,8 @@ export const removeSessao = (): void => {
 export const getToken = (): string | null => getSessao()?.token ?? null
 export const removeToken = (): void => removeSessao()
 export const isAuthenticated = (): boolean => !!getToken()
+
+// Usado em qualquer fluxo que precise atrelar uma ação ao operador logado
+// (abrir/fechar caixa, sangria, venda) — evita operadorId fixo no código.
+export const getUsuarioId = (): number | null => getSessao()?.usuarioId ?? null
+export const getNomeUsuario = (): string | null => getSessao()?.nome ?? null
