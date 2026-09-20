@@ -3,6 +3,7 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { setSessao } from '../../shared/auth'
 import { Lock, User } from 'lucide-react'
+import logo from '../../assets/sysflex-logo.png'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -30,9 +31,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🥩</div>
-          <h1 className="text-2xl font-bold text-white">AçougueERP</h1>
-          <p className="text-gray-400 text-sm mt-1">Sistema de Gestão</p>
+          <img
+            src={logo}
+            alt="SysFlex ERP"
+            className="h-14 w-auto mx-auto"
+          />
         </div>
 
         <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl border border-gray-700">
