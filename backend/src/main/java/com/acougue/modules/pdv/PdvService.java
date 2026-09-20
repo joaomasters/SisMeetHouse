@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,11 +30,15 @@ public class PdvService {
     private final ContasAReceberRepository contasRepo;
     private final EstoqueService           estoqueService;
     private final EanBalancaParser         eanParser;
+    private final CaixaService             caixaService;
 
     // ── Caixa ──────────────────────────────────────────────────
 
     @Transactional
     public Caixa abrirCaixa(Long operadorId, BigDecimal valorAbertura) {
+        if (valorAbertura == null || valorAbertura.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("Valor de abertura não pode ser negativo.");
+        }
         caixaRepo.findFirstByOperadorIdAndStatus(operadorId, "ABERTO")
                 .ifPresent(c -> { throw new BusinessException("Operador já possui caixa aberto."); });
         return caixaRepo.save(Caixa.builder()
@@ -45,12 +50,34 @@ public class PdvService {
 
     @Transactional
     public Caixa fecharCaixa(Long caixaId, BigDecimal valorInformado) {
+        if (valorInformado == null || valorInformado.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("Valor informado não pode ser negativo.");
+        }
+
         Caixa caixa = caixaRepo.findById(caixaId)
                 .orElseThrow(() -> new EntityNotFoundException("Caixa não encontrado: " + caixaId));
         if (!"ABERTO".equals(caixa.getStatus())) {
             throw new BusinessException("Caixa já está fechado.");
         }
+
+        // Sem essa trava, uma comanda em andamento (ainda ABERTA) some do
+        // sistema pra sempre: ao fechar o caixa, nada mais aponta pra ela —
+        // a tela de PDV só lista comandas do caixa ABERTO do operador atual.
+        List<Venda> abertas = vendaRepo.findByCaixaIdAndStatus(caixaId, "ABERTA");
+        if (!abertas.isEmpty()) {
+            throw new BusinessException(String.format(
+                    "Existe(m) %d comanda(s) em aberto nesse caixa. Finalize ou cancele antes de fechar.",
+                    abertas.size()));
+        }
+
+        // Registra, no momento do fechamento, o saldo que o sistema esperava
+        // encontrar — sem isso valorCalculado ficava sempre nulo e não dava
+        // pra auditar depois se sobrou/faltou dinheiro na gaveta.
+        BigDecimal saldoEsperado = caixaService.calcularFechamento(caixaId).getSaldoEsperado();
+
         caixa.setValorFechamentoInformado(valorInformado);
+        caixa.setValorCalculado(saldoEsperado);
+        caixa.setDataFechamento(LocalDateTime.now());
         caixa.setStatus("FECHADO");
         return caixaRepo.save(caixa);
     }

@@ -31,7 +31,7 @@ public class PdvController {
         return ResponseEntity.ok(pdvService.abrirCaixa(operadorId, valorAbertura));
     }
 
-    @ExigirPermissao(modulo = Modulo.PDV, acao = Acao.EDITAR)
+    @ExigirPermissao(modulo = Modulo.PDV, acao = Acao.CRIAR)
     @PostMapping("/caixa/{id}/fechar")
     public ResponseEntity<Caixa> fecharCaixa(
             @PathVariable Long id,
@@ -87,7 +87,7 @@ public class PdvController {
         return ResponseEntity.ok(pdvService.fecharVenda(dto));
     }
 
-    @ExigirPermissao(modulo = Modulo.PDV, acao = Acao.EXCLUIR)
+    @ExigirPermissao(modulo = Modulo.PDV, acao = Acao.CRIAR)
     @PostMapping("/vendas/{id}/cancelar")
     public ResponseEntity<Venda> cancelarVenda(@PathVariable Long id) {
         return ResponseEntity.ok(pdvService.cancelarVenda(id));
