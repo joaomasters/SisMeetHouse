@@ -63,7 +63,7 @@ export default function PerdasPage() {
   const totalPerdas = perdas.data?.reduce((s, p) => s + (p.custoTotal ?? 0), 0) ?? 0
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-5">
+    <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
