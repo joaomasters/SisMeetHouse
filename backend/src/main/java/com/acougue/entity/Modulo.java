@@ -18,7 +18,8 @@ public enum Modulo {
     CARGA_BALANCA("Carga Balança"),
     USUARIOS("Usuários"),
     PERFIS("Perfis"),
-    CLIENTES("Clientes");
+    CLIENTES("Clientes"),
+    AUDITORIA("Auditoria");
 
     private final String rotulo;
 
