@@ -19,6 +19,7 @@ import RecebimentoPage from './modules/estoque/RecebimentoPage'
 import FichasDesossaPage from './modules/estoque/FichasDesossaPage'
 import NotaFiscalPage from './modules/fiscal/NotaFiscalPage'
 import UsuariosPage from './modules/acesso/UsuariosPage'
+import AuditoriaPage from './modules/acesso/AuditoriaPage'
 import PerfisPage from './modules/acesso/PerfisPage'
 import HomePage from './modules/home/HomePage'
 
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/financeiro/relatorios"     element={<RelatoriosPage />} />
             <Route path="/balanca"                   element={<CargaBalancaPage />} />
             <Route path="/acesso/usuarios"           element={<UsuariosPage />} />
+            <Route path="/acesso/auditoria"          element={<AuditoriaPage />} />
             <Route path="/acesso/perfis"             element={<PerfisPage />} />
           </Route>
         </Route>

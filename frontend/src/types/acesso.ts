@@ -31,3 +31,14 @@ export interface ModuloInfo {
   nome: string
   rotulo: string
 }
+
+export interface LogAuditoria {
+  id: number
+  usuarioId: number | null
+  nomeUsuario: string
+  perfilUsuario: string | null
+  modulo: string
+  acao: 'CRIAR' | 'EDITAR' | 'EXCLUIR'
+  descricao: string | null
+  criadoEm: string
+}
