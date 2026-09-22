@@ -73,7 +73,7 @@ export default function InventarioPage() {
   const isAberto = inventarioAtivo?.status === 'ABERTO'
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-5">
+    <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">

@@ -3,13 +3,14 @@ import {
   ShoppingCart, Package, Scissors, DollarSign,
   CreditCard, BarChart2, Scale, AlertTriangle,
   ClipboardList, TrendingDown, ArrowDownCircle, BarChart, LogOut,
-  Truck, FileText, Users, ShieldCheck, Home, Contact
+  Truck, FileText, Users, ShieldCheck, Home, Contact, ShieldAlert
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { api } from '../api/axios'
 import { removeSessao } from '../auth'
 import { usePermissao } from '../hooks/usePermissao'
+import logo from '../../assets/sysflex-logo.png'
 
 const nav = [
   { label: 'Início', href: '/inicio', icon: Home, sempreVisivel: true },
@@ -41,6 +42,7 @@ const nav = [
   { separator: 'Administração' },
   { label: 'Usuários', href: '/acesso/usuarios', icon: Users,       modulo: 'USUARIOS' },
   { label: 'Perfis',   href: '/acesso/perfis',   icon: ShieldCheck, modulo: 'PERFIS' },
+  { label: 'Auditoria', href: '/acesso/auditoria', icon: ShieldAlert, modulo: 'AUDITORIA' },
 ]
 
 export default function Sidebar() {
@@ -78,8 +80,7 @@ export default function Sidebar() {
   return (
     <aside className="w-60 bg-gray-900 text-white flex flex-col min-h-screen">
       <div className="px-5 py-5 border-b border-gray-700">
-        <p className="text-lg font-bold text-red-400 tracking-wide">🥩 AçougueERP</p>
-        <p className="text-xs text-gray-400 mt-0.5">Sistema de Gestão</p>
+        <img src={logo} alt="SysFlex ERP" className="h-9 w-auto" />
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">

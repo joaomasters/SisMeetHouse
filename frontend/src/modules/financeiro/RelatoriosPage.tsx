@@ -38,7 +38,7 @@ export default function RelatoriosPage() {
   ]
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Relatórios</h1>
         <p className="text-sm text-gray-500">Análise de desempenho e controle gerencial</p>
