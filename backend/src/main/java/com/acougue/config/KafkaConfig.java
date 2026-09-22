@@ -39,8 +39,6 @@ public class KafkaConfig {
     @Value("${kafka.security.protocol:SASL_SSL}")
     private String securityProtocol;
 
-    
-
     private Map<String, Object> commonProps() {
         Map<String, Object> props = new HashMap<>();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -54,17 +52,12 @@ public class KafkaConfig {
         return props;
     }
 
-    
-    
-
     @Bean
     public KafkaAdmin kafkaAdmin() {
         KafkaAdmin admin = new KafkaAdmin(commonProps());
         admin.setFatalIfBrokerNotAvailable(false); 
         return admin;
     }
-
-    
 
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
@@ -79,8 +72,6 @@ public class KafkaConfig {
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
-
-    
 
     @Bean
     public ConsumerFactory<String, VendaFechadaEvent> vendaConsumerFactory() {
