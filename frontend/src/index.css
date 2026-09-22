@@ -21,3 +21,34 @@
     scrollbar-color: #374151 transparent;
   }
 }
+
+/*
+ Impressão do cupom de venda (ver ReciboCupom.tsx).
+ Em tela o recibo fica fora do fluxo (display:none); ao imprimir,
+ tudo mais some e só o recibo aparece, ocupando a largura da bobina.
+*/
+@media screen {
+  #recibo-impressao {
+    display: none;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #recibo-impressao,
+  #recibo-impressao * {
+    visibility: visible;
+  }
+  #recibo-impressao {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+  @page {
+    margin: 0;
+  }
+}
