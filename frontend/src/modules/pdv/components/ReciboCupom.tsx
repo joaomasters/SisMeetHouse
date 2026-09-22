@@ -28,19 +28,20 @@ export default function ReciboCupom({ venda, operador }: Props) {
         #recibo-impressao {
           width: ${LARGURA_PAPEL_MM}mm;
           font-family: 'Courier New', Courier, monospace;
-          font-size: 11px;
-          line-height: 1.35;
+          font-size: ${LARGURA_PAPEL_MM <= 58 ? 9.5 : 11}px;
+          line-height: 1.3;
           color: #000;
-          padding: 2mm 3mm;
+          padding: 1.5mm 2mm;
         }
         #recibo-impressao .centro { text-align: center; }
-        #recibo-impressao .separador { border-top: 1px dashed #000; margin: 3px 0; }
-        #recibo-impressao .linha { display: flex; justify-content: space-between; gap: 4px; }
+        #recibo-impressao .separador { border-top: 1px dashed #000; margin: 2px 0; }
+        #recibo-impressao .linha { display: flex; justify-content: space-between; gap: 3px; }
         #recibo-impressao .negrito { font-weight: bold; }
-        #recibo-impressao table { width: 100%; border-collapse: collapse; }
+        #recibo-impressao table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         #recibo-impressao th { text-align: left; font-weight: normal; border-bottom: 1px solid #000; padding-bottom: 2px; }
         #recibo-impressao th.num, #recibo-impressao td.num { text-align: right; }
-        #recibo-impressao .total-grande { font-size: 15px; font-weight: bold; }
+        #recibo-impressao td { overflow-wrap: break-word; }
+        #recibo-impressao .total-grande { font-size: ${LARGURA_PAPEL_MM <= 58 ? 13 : 15}px; font-weight: bold; }
         @page { size: ${LARGURA_PAPEL_MM}mm auto; margin: 0; }
       `}</style>
 

@@ -10,6 +10,6 @@ export const SISTEMA = {
   telefones: ['(43) 99808-8022', '(43) 99602-1880'],
 }
 
-// 80mm é o padrão pra maioria das impressoras térmicas de açougue/mercado.
-// Se a impressora do cliente for de 58mm, troque aqui.
-export const LARGURA_PAPEL_MM = 80
+// 58mm é a largura da bobina da impressora térmica do Açougue do Zé.
+// Se trocar de impressora pra uma de 80mm, troque aqui.
+export const LARGURA_PAPEL_MM = 58
