@@ -164,7 +164,7 @@ export default function CargaBalancaPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <Scale size={24} className="text-red-600" /> Carga de Balança
