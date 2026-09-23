@@ -116,7 +116,7 @@ export default function DesossaPage() {
   const recebSel = recebimentos.find(r => r.id === parseInt(recebimentoId))
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <Scissors size={24} className="text-red-600" /> Desossa / Rendimento
